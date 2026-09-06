@@ -53,15 +53,18 @@ exercise the linked service without moving the product CNAME between hosts.
 
 The Rust service owns room state. In production it writes SQLite to
 `/data/orderly-chaos.sqlite3`, runs as one replica, and needs only `PORT`.
-Deploy the backend with:
+Its release script updates only the container image, then verifies the new
+build through the linked public API:
+
+```sh
+./scripts/deploy-backend.sh
+```
+
+For the first deployment only, create the backend with the factory container
+helper and link it to the existing Standard static site:
 
 ```sh
 WO_DATA_DIR=/data /opt/fleet/lib/deploy-container.sh orderly-chaos /work/repo Dockerfile 8080
-```
-
-Then link the owned container to the existing Standard static site once:
-
-```sh
 az staticwebapp backends link \
   --resource-group sociobot \
   --name sf-orderly-chaos \
