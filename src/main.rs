@@ -790,6 +790,9 @@ mod tests {
         assert_eq!(count, 1);
     }
 
+    // @claim:room-token-hash
+    // The exact Cargo command in .factory/claims.json selects this
+    // production-handler test by name.
     #[tokio::test]
     async fn claim_room_token_hash_room_access_is_hashed_at_rest() {
         let state = AppState {
