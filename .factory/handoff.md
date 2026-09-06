@@ -2,21 +2,19 @@
 
 ## Outcome
 
-Repair 8 closes the verification-7 claims-contract finding.
+Independent verification 8 passes with **0 findings** and **0 untested public
+claims**.
 
 - Live URL: <https://orderly-chaos.sociobot.in>
 - Runtime implementation: `a3897cc9677644cfa59b997b0a71c15e245015c7`
-- Repair documentation revision: `78dc5cabf9630771289ccd2ab50dfcd3b9c3df37`
-- Prior verification documentation: `7a446638fec79f3ae5203c424c21add05626407f`
-- Repair: the existing Rust/SQLite production-handler test for hashed room
-  access storage now carries its required `@claim:room-token-hash` tag.
+- Documentation baseline: `c581a57f5d19947b1e4fe594ff13a10dd2c0f939`
+- Independent report: `.factory/verification-8.md`
 
-The tag is attached directly to the test that creates a room through the
-production handler and proves SQLite stores a 64-character SHA-256 value,
-not the returned access value. No room behavior, data format, price, or game
-scope changed.
+The live backend reports the implementation SHA, and the live JavaScript and
+CSS match the clean local build byte for byte. No product code was changed by
+this verification.
 
-## Verification
+## Verification completed
 
 From the documented clean setup:
 
@@ -27,61 +25,41 @@ npm run build
 ```
 
 - `npm ci` passed with 0 reported vulnerabilities.
-- All 20 exact commands in `.factory/claims.json` passed separately.
-- The claim audit found exactly one `@claim:<id>` tag in test source for each
-  of the 20 declared IDs, including `room-token-hash`.
-- `npm test` passed: 6 core tests, 4 Rust/SQLite tests, and 27 Playwright
-  checks.
+- All 20 exact claim commands passed separately. Each claim ID has exactly one
+  `@claim:<id>` marker, including `room-token-hash`.
+- `npm test` passed: 6 core, 4 Rust/SQLite, and 27 browser tests.
 - `npm run build` produced `dist/`; initial JavaScript is 11.72 KB gzip and
   CSS is 4.19 KB gzip.
-- The focused `room-token-hash` command passed and still verifies observable
-  at-rest hashing through the real handler.
+- The full public HTTPS suite passed 27/27.
+- `npm run verify:live` passed 2/2 after restarting only the owned product
+  revision. The solved room persisted and new-room creation recovered.
+- Fresh desktop and phone contexts showed the job, audience, sample action,
+  facts, game board, and an exhibit before scrolling, without console errors
+  or ordinary-width overflow.
+- A recorded sample run reached **Case solved** with four comparisons. The
+  suite also covered loss, replay, restart, settings, mouse, keyboard, touch,
+  room boundaries, 429 recovery, privacy, routes, legal pages, and 404.
+- URL verification and Playwright Axe passed. Mobile Lighthouse scored
+  100 performance, 100 accessibility, 100 best practices, and 100 SEO; LCP
+  was 1,261 ms, CLS 0, and total blocking time 56 ms.
 
-The owned backend deployment preflight confirmed one replica and the durable
-`/data` mount. The image-only deployment preserved that topology. Public
-`/api/health` reports the runtime implementation SHA above.
+Evidence is in `/work/.evidence/orderly-chaos-verify-8/`. The required copies
+are `/work/.evidence/qa-report.md` and `/work/.evidence/qa-result.json`.
 
-After deployment:
+## Earlier findings
 
-- `npm run verify:live` passed 2/2, including an owned revision restart,
-  persisted shared-room result, new-room recovery, health JSON, and deliberate
-  404 behavior.
-- The full public HTTPS Playwright suite passed 27/27, covering the complete
-  win/loss loop, reset, keyboard/mouse/touch, demo isolation, two independent
-  browser clients, expiry, third-player rejection, unauthorised access, 429
-  recovery, legal routes, mobile targets, reduced motion, privacy, and Axe.
-- `/opt/fleet/lib/verify-url.sh` passed with one `h1`, `lang=en`, `main`,
-  image alt text, labelled controls, and no console errors.
-- Fresh 1440 px desktop and 390 px phone browser contexts showed the job,
-  audience, sample action, game board, and an exhibit before scrolling. Both
-  had no horizontal overflow or console errors.
-- `/repair-8-not-found` returns HTTP 404 as designed.
+All earlier findings are resolved: backend routing and restart persistence,
+HTTP 404 status, distinct case rules, claim registration, phone target sizes,
+404 focus layout, privacy claim coverage, and the `room-token-hash` tag.
 
-Fresh screenshots and the URL-verifier output are in
-`/work/.evidence/orderly-chaos-repair-8/`. The catalog description was copied
-to `/work/.evidence/catalog-description.txt`.
+## Remaining dependency
 
-## Earlier finding disposition
+Checkout registration remains outside this repository. The product accurately
+shows **Checkout registration pending** and does not claim a completed live
+checkout or activation. The public offer remains $6 USD once for 19 paid
+cases, 20 total, with no subscription. The free case remains complete.
 
-| Earlier finding | Current disposition |
-| --- | --- |
-| Verification 1–5: live room backend unavailable or lost after restart | Resolved and rechecked after the owned revision restart. |
-| Verification 1–2: unknown routes returned 200 | Resolved; current deliberate missing route is HTTP 404. |
-| Verification 2: cases lacked distinct inference rules | Resolved; the curated-case rule claim remains green. |
-| Verification 2: public claims lacked registrations | Resolved. |
-| Verification 6: undersized targets and 404 focus overlap | Resolved; full live browser checks remain green. |
-| Verification 6: three privacy claims lacked tests | Resolved. |
-| Verification 7: missing `@claim:room-token-hash` tag | Resolved by this repair; behavior and tag audit both pass. |
-
-## Offer and remaining dependency
-
-The permanent free case remains playable. The complete offer remains **$6 USD
-once** for 19 additional curated cases, 20 total, with no subscription.
-Checkout registration is still an external billing-operator dependency. The
-public control remains disabled and says registration is pending; this repair
-does not claim a checkout or paid activation passed.
-
-## How to verify again
+## Repeat verification
 
 ```sh
 npm ci
@@ -90,5 +68,5 @@ npm run build
 npm run verify:live
 ```
 
-Run each exact command in `.factory/claims.json` separately. The live suite
-requires the product-owned backend and contains no credentials or test tokens.
+Also run every exact command in `.factory/claims.json` separately. The restart
+check targets only `sf-orderly-chaos` and does not print room access values.
