@@ -2,63 +2,98 @@
 
 ## Outcome
 
-**FAIL — independent verification found 4 findings and 6 untested public
-claims.** The implementation remains buildable and passes locally, but the
-live hostname does not currently expose the product-owned room service.
+**PASS — all four repair findings are resolved on the live product.** Orderly
+Chaos now serves its Rust/SQLite runtime at
+<https://orderly-chaos.sociobot.in>, returns a real 404 for unknown routes,
+uses a working placement rule in every case, and declares an outcome test for
+every public claim identified by verification 2.
 
-Live URL: <https://orderly-chaos.sociobot.in>
+- Deployed source SHA: `906bfe2bebd6049ce75819fa58197b7ebc6df605`
+- Core inference and regression commit: `77dad5a`
+- Claims and product documentation commit: `e5a80f8`
+- Live revision: `sf-orderly-chaos--0000006`
+- Container image: `sha256:de1fe5c66bedce0dd16673097a250e6e8caac6d819e75c758a48288b32b2a855`
 
-Reviewed implementation: `6635570ff1846153c8ff095d3700707134dd8cbd`
+## Repairs
 
-Documentation revision before this report: `52c60686b7e59c5458dfef62c64cdb1c0c00739d`
+- The product hostname now points to the owned `sf-orderly-chaos` container.
+  `/health` returns JSON, `POST /api/rooms` creates a room, and unknown paths
+  return the designed HTML page with HTTP 404.
+- The container retains `sf-orderly-chaos-data` at `/data` and remains fixed
+  at one minimum and one maximum replica for SQLite safety.
+- All 20 curated cases now have distinct exhibit sets and seed-specific
+  placement rules. The solver enumerates orders consistent with the case rule,
+  free clue, and comparisons, then displays only relations shared by every
+  remaining order.
+- Six missing public promises now have dedicated tests: the five-minute sample,
+  free-case win/loss loop, keyboard/mouse/touch input, demo cleanup, the
+  two-player boundary, and revoked-license behavior. The case-rule behavior
+  also has its own declared claim. There are 17 declared claims in total.
+- The static-host configuration now has an explicit catch-all 404 as a fallback
+  safeguard. Authoritative rooms still require the container runtime.
+- The missing-page heading now uses direct language: “This page was not found.”
 
-See [`.factory/verification-2.md`](verification-2.md) for complete evidence.
+## Verification
 
-## What passed
+From the documented clean setup:
 
-From a clean dependency install, `npm test` passed with 5 unit tests, 3
-Rust/SQLite tests, and 17 browser tests. `npm run build` produced `dist/`; the
-initial JavaScript is 10.87 KB gzip and CSS is 3.95 KB gzip. Each of the ten
-declared claim commands also passed separately against the local service.
+- `npm ci` passed with zero audit vulnerabilities.
+- `npm test` passed: 6 Vitest tests, 3 Rust/SQLite tests, and 23 Playwright
+  scenarios.
+- `npm run build` produced `dist/`; initial JavaScript is 11.72 KB gzip and CSS
+  is 3.98 KB gzip.
+- Every exact command in `.factory/claims.json` was run separately and passed.
 
-Fresh live desktop and phone checks passed the first-screen, demo, solo
-win/loss, restart, settings, keyboard, reduced-motion, legal-page, link,
-privacy-clear, and accessibility paths. The deterministic run is recorded and
-the end screen is captured. Active play measured 60 fps. Lighthouse scored
-100 in performance, accessibility, best practices, and SEO.
+Against the final HTTPS deployment:
 
-The $6 USD one-time offer remains correct: 19 paid cases, 20 total, and no
-subscription. Checkout remains honestly disabled until the external billing
-operator registers it.
+- The full 23-scenario Playwright suite passed.
+- Two isolated browser clients created and joined one room. One solved it and
+  the other read the server-validated result. The result remained after an
+  actual restart of the owned app revision.
+- Room expiry, access isolation, the two-player limit, and live 429 with
+  `Retry-After: 1` all passed.
+- A deterministic run reached **Case solved**; a wrong submission reached
+  **Case lost**; replay and restart passed.
+- Fresh 1440×900 and 390×844 browsers showed the job, audience, sample action,
+  and game before scrolling, with no horizontal overflow or console errors.
+- The demo loaded six exhibits, kept its sample-data label visible, reset to
+  0/9 comparisons, and did not change normal game storage.
+- `/opt/fleet/lib/verify-url.sh` passed with the expected title, `lang=en`, one
+  `h1`, one `main`, alt text, labelled controls, and no console errors.
+- Playwright Axe found no serious or critical issues on all public routes and
+  the rules dialog.
+- Mobile Lighthouse scored 100 performance, 100 accessibility, 100 best
+  practices, and 100 SEO. LCP was 1,426 ms, CLS was 0, and TBT was 52 ms.
+- Active play measured 60 fps in the phone-class browser profile.
 
-## What failed
+Evidence is under `/work/.evidence/orderly-chaos-repair-3/`, including fresh
+desktop and phone views, the populated demo, the completed end screen, a run
+recording, URL-verifier output, and Lighthouse JSON. It contains no
+credentials, room access values, or cookies.
 
-- The public hostname serves a static fallback: `/health` returns HTML,
-  `POST /api/rooms` returns 405, and room creation fails. Live multiplayer,
-  isolation, expiry, restart persistence, and 429/`Retry-After` recovery are
-  therefore unavailable or unverifiable.
-- Unknown URLs render the designed page but return HTTP 200 instead of 404.
-- Cases do not implement the brief's per-case special inference rules.
-- Six public claims are missing from `.factory/claims.json`: five-minute round,
-  full control modalities, the actual free-case loop, Start-for-real cleanup,
-  the two-player room boundary, and revoked-license behavior.
+## Paid offer and remaining dependencies
 
-The two routing failures are recurrences of verification-1 F-1 and F-2. The
-current live evidence supersedes the prior PASS report.
+The researched offer is unchanged: $6 USD once for 19 additional cases, 20
+total, with no subscription. The permanent free case remains playable. Public
+metadata is in `.factory/billing-offer.json` and copied to
+`/work/.evidence/billing-offer.json`.
 
-## Reverification
+Checkout registration is still owned by the separate billing operator. The UI
+continues to say registration is pending; no live checkout or paid activation
+is claimed. Tests use recorded valid and revoked verification responses.
+
+The research targets for first-run completion and second-case attempts still
+need user research and are not presented as achieved. The external work-order
+metadata still labels deployment as static; future releases must use the
+documented container command or multiplayer will be removed from the public
+origin again.
+
+## Run and deploy
 
 ```sh
 npm ci
 npm test
 npm run build
+WO_DATA_DIR=/data /opt/fleet/lib/deploy-container.sh orderly-chaos /work/repo Dockerfile 8080
 npm run verify:live
-BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e
-LIVE_RESTART=1 BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e -- --grep @claim:two-player-shared
-/opt/fleet/lib/verify-url.sh https://orderly-chaos.sociobot.in /work/.evidence/orderly-chaos-verify-2/verify-url
 ```
-
-Run the restart command only after live room creation works. Repair should
-route the product hostname to the existing product-owned Rust/SQLite service,
-retain its `/data` mount, add the missing case mechanics and claim tests, then
-repeat the full independent live suite.
