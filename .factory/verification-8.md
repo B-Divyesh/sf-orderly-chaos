@@ -5,7 +5,7 @@ of the verification-7 finding; a later independent review remains the final
 acceptance authority.
 
 - Runtime implementation: `a3897cc9677644cfa59b997b0a71c15e245015c7`
-- Repair documentation revision: `78dc5ca9fcb7e75da7eea5df22fd3e2e71ed95b7`
+- Repair documentation revision: `78dc5cabf9630771289ccd2ab50dfcd3b9c3df37`
 - Verification-7 documentation baseline: `7a446638fec79f3ae5203c424c21add05626407f`
 - Live URL: <https://orderly-chaos.sociobot.in>
 
