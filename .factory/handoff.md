@@ -6,6 +6,7 @@ Repair 8 closes the verification-7 claims-contract finding.
 
 - Live URL: <https://orderly-chaos.sociobot.in>
 - Runtime implementation: `a3897cc9677644cfa59b997b0a71c15e245015c7`
+- Repair documentation revision: `78dc5ca9fcb7e75da7eea5df22fd3e2e71ed95b7`
 - Prior verification documentation: `7a446638fec79f3ae5203c424c21add05626407f`
 - Repair: the existing Rust/SQLite production-handler test for hashed room
   access storage now carries its required `@claim:room-token-hash` tag.
