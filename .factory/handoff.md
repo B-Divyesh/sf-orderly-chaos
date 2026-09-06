@@ -6,6 +6,7 @@
 
 - Live URL: <https://orderly-chaos.sociobot.in>
 - Implementation SHA: `7883cfb`
+- Documentation report SHA: `7104da9`
 - Evidence: `/work/.evidence/orderly-chaos-repair-7/`
 - Assigned report: `.factory/verification-6.md`
 
