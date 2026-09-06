@@ -36,6 +36,9 @@ test('@claim:complete-run a deterministic case reaches a real win screen', async
   await expect(page.getByRole('heading', { name: 'Case solved' })).toBeVisible();
   await expect(page.locator('.end-screen')).toContainText('5 comparisons');
   await expect(page.getByRole('button', { name: 'Play this case again' })).toBeVisible();
+  if (process.env.EVIDENCE_DIR) {
+    await page.screenshot({ path: `${process.env.EVIDENCE_DIR}/live-win-screen.png`, fullPage: true });
+  }
 });
 
 test('an incorrect submitted order reaches the loss screen', async ({ page }) => {
@@ -102,11 +105,12 @@ test('@claim:solo-local-privacy solo demo sends no cross-origin requests', async
   const [first, second] = createCase(DEMO_SEED).hiddenOrder;
   await page.locator(`[data-compare="${first}"]`).click();
   await page.locator(`[data-compare="${second}"]`).click();
-  expect([...origins]).toEqual(['http://127.0.0.1:4173']);
+  expect([...origins]).toEqual([new URL(page.url()).origin]);
   await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
 });
 
 test('@claim:two-player-shared two independent browsers share authoritative room results', async ({ browser }) => {
+  if (process.env.LIVE_RESTART === '1') test.setTimeout(180_000);
   const firstContext = await browser.newContext();
   const secondContext = await browser.newContext();
   const first = await firstContext.newPage();
@@ -126,6 +130,26 @@ test('@claim:two-player-shared two independent browsers share authoritative room
     await expect(first.getByRole('heading', { name: 'Case solved' })).toBeVisible();
     await second.getByRole('button', { name: 'Refresh room results' }).click();
     await expect(second.locator('.room-players li').first()).toContainText('Solved');
+    if (process.env.LIVE_RESTART === '1') {
+      const { execFileSync } = await import('node:child_process');
+      const revision = execFileSync('az', [
+        'containerapp', 'revision', 'list', '--name', 'sf-orderly-chaos', '--resource-group', 'sociobot',
+        '--query', "[?properties.active && properties.healthState=='Healthy'].name | [0]", '-o', 'tsv',
+      ], { encoding: 'utf8' }).trim();
+      expect(revision).toMatch(/^sf-orderly-chaos--/);
+      execFileSync('az', [
+        'containerapp', 'revision', 'restart', '--name', 'sf-orderly-chaos', '--resource-group', 'sociobot', '--revision', revision,
+      ]);
+      await expect.poll(async () => {
+        try {
+          return (await second.request.get('/health')).status();
+        } catch {
+          return 0;
+        }
+      }, { timeout: 120_000, intervals: [1000, 2000, 3000] }).toBe(200);
+      await second.getByRole('button', { name: 'Refresh room results' }).click();
+      await expect(second.locator('.room-players li').first()).toContainText('Solved');
+    }
   } finally {
     await firstContext.close();
     await secondContext.close();
@@ -178,15 +202,11 @@ test('normal, invalid, boundary, and recovery room paths', async ({ page, reques
   await page.getByRole('button', { name: 'Join room' }).click();
   await expect(page.locator('#room-form-error')).toContainText('five-character');
 
-  const statuses: number[] = [];
-  let retryAfter: string | undefined;
-  for (let index = 0; index < 12; index += 1) {
-    const response = await request.post('/api/rooms', {
-      data: { seed: `rate-limit-${index}` }, headers: { 'x-forwarded-for': '203.0.113.77' },
-    });
-    statuses.push(response.status());
-    if (response.status() === 429) retryAfter = response.headers()['retry-after'];
-  }
+  const responses = await Promise.all(Array.from({ length: 12 }, (_, index) => request.post('/api/rooms', {
+    data: { seed: `rate-limit-${index}` }, headers: { 'x-forwarded-for': '203.0.113.77' },
+  })));
+  const statuses = responses.map((response) => response.status());
+  const retryAfter = responses.find((response) => response.status() === 429)?.headers()['retry-after'];
   expect(statuses).toContain(429);
   expect(retryAfter).toBe('1');
   const health = await request.get('/health');

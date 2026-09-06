@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const liveBaseUrl = process.env.BASE_URL;
+
 export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
@@ -8,7 +10,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['line']],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: liveBaseUrl || 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -16,7 +18,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
-  webServer: {
+  webServer: liveBaseUrl ? undefined : {
     command: 'npm run build && npm run serve:test',
     url: 'http://127.0.0.1:4173/health',
     timeout: 240_000,
