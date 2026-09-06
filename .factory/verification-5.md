@@ -5,7 +5,7 @@ declared claims**.
 
 - Live URL: <https://orderly-chaos.sociobot.in>
 - Deployed implementation: `a1f64ae39dc18764310169be498ee7622e6dc0e4`
-- Verification documentation revision: report-only follow-up commit pending
+- Verification documentation revision: `d9582659e36b1cb4994c9cd76d6b882e6200c07d`
 - Verification date: 2026-09-06 UTC
 
 ## Repair verified
