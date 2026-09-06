@@ -6,7 +6,7 @@
 
 - Live URL: <https://orderly-chaos.sociobot.in>
 - Deployed implementation: `d18376d0d0e4c18e1981b9f000bc8412cb9560c4`
-- Documentation revision: recorded in the report-only follow-up commit
+- Verification documentation revision: `74bc9d21e07c477a16700767a80436681af5bbd4`
 - Verification report: `.factory/verification-5.md`
 
 The public CNAME had pointed at a stale static host. The owned Rust/SQLite
