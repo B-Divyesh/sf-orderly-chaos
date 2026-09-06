@@ -2,92 +2,87 @@
 
 ## Outcome
 
-**PASS — the public room service now survives static releases and container
-revision restarts.**
+**FAIL — verification 6 found 3 findings and 3 untested public claims.**
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Deployed product implementation: `27713d6d1ff7870bea61eff169daa0405f0f3986`
-- Deployment-tooling revision: `47633e5ae7e74bc6cb3716a7ff5810252f0be6f1`
-- Active backend revision: `sf-orderly-chaos--0000010`
-- Evidence: `/work/.evidence/orderly-chaos-repair-6/`
+- Implementation candidate: `27713d6d1ff7870bea61eff169daa0405f0f3986`
+- Documentation baseline reviewed: `54ba1e8b4c90a34f08f3f3bf5f810b0a2d4235d0`
+- Report: `.factory/verification-6.md`
+- Evidence: `/work/.evidence/orderly-chaos-verify-6/`
 
-The recurring defect was a deployment-topology conflict. The container deploy
-set the product CNAME to the Rust service at 04:36:33 UTC, then the work
-order's automatic static deployment set it back to Azure Static Web Apps at
-04:41:26 UTC. Restarting a container revision did not change DNS; the later
-static release did.
+The implementation and its repaired deployment topology pass their functional
+checks. The live JavaScript is byte-identical to the clean candidate build,
+and health reports the full candidate SHA. The report-only verdict is FAIL
+because acceptance requires zero findings and zero untested public claims.
 
-The static site is now the stable public origin. Its linked backend sends
-`/api/*` to the owned `sf-orderly-chaos` Container App. Static routing rewrites
-public `/health` to the backend's `/api/health` alias. Static releases no
-longer disconnect multiplayer, and container restarts no longer depend on a
-CNAME cutover.
+## Findings to address
 
-The backend link remained provisioned after a fresh static upload. The active
-container still has one minimum and maximum replica, the existing
-`sf-orderly-chaos-data` volume at `/data`, and SQLite state at
-`/data/orderly-chaos.sqlite3`. `scripts/deploy-backend.sh` now updates only the
-owned image and verifies the build through the linked API, preserving that
-topology.
+1. **Major:** make every mobile link target at least 44 × 44 CSS px. The main
+   nav, wordmark, footer links, legal contact link, restore link, and 404 links
+   currently measure 16–27.9 px high.
+2. **Minor:** hide the 404 skip link until keyboard focus, prevent its box from
+   overlapping the wordmark, and give 404 controls the same designed 3 px
+   focus treatment as the main app.
+3. **Major:** register exact claim tests for the public statements about no
+   analytics/tracking/advertising cookies, complete browser-data removal, and
+   hashed room-token storage. The complete removal action passed an independent
+   manual check, but the claims contract requires a declared command.
+
+Do not change the established offer or claim checkout activation. The offer is
+still $6 USD once for 19 additional cases, 20 total, with no subscription.
+Checkout registration remains external and pending.
 
 ## Verification completed
 
 - Clean `npm ci`: pass; 0 reported vulnerabilities.
 - `npm test`: pass — 6 Vitest, 3 Rust/SQLite, and 23 Playwright checks.
-- `npm run build`: pass; `dist/` produced. Initial JavaScript is 11.72 KB gzip
-  and CSS is 4.13 KB gzip.
-- All 17 exact commands in `.factory/claims.json`: pass independently against
-  the documented local Rust/SQLite server.
-- `npm run verify:live`: pass after restarting the owned active revision.
-- Full restart-enabled live suite: 23/23 pass.
-- Two independent browser contexts created and joined one room. One solved the
-  case, the other read the server-validated result, and the result persisted
-  through restart. A new room also succeeded after restart.
-- Live expiry, two-player limit, access isolation, and burst recovery pass.
-  The burst returns 429 with `Retry-After: 1`; health stays available.
-- Public `/health` returns 200 JSON with build `27713d6`; room creation returns
-  200 JSON; an unknown route returns the designed HTML with HTTP 404.
-- Fresh 1440 × 900 desktop and 390 × 844 phone contexts show the play task,
-  audience, sample action, active board, and an exhibit before scrolling.
-  Both have no horizontal overflow or console errors.
-- The one-click demo loads six populated exhibits with the persistent sample
-  label. Reset returns to 0/9 and leaves normal solo storage unchanged.
-- The recorded deterministic run reaches **Case solved** with four comparisons
-  and five tokens remaining. Win evidence, replay, loss, and restart pass.
-- Keyboard, mouse, touch, focus, reduced motion, local-data clearing, route
-  titles, legal pages, links, and settings persistence pass.
-- `/opt/fleet/lib/verify-url.sh`: pass — HTTPS 200, correct title and language,
-  one h1, main landmark, alt text, labelled buttons, and no console errors.
-- Playwright Axe across every public route and the controls dialog: no serious
-  or critical issues.
-- Mobile Lighthouse: 100 performance, 100 accessibility, 100 best practices,
-  and 100 SEO; LCP 1,302 ms, CLS 0, TBT 91 ms.
-- The registered phone-class active-play measurement passes at 50 fps or
-  better. No offline or update behavior is promised.
+- `npm run build`: pass; `dist/` produced. Initial JavaScript is 11,673 bytes
+  gzip and CSS is 4,144 bytes gzip.
+- All 17 declared claim commands: pass independently.
+- Full live suite with an owned revision restart: 23/23 pass.
+- Two real isolated clients share authoritative results. The room result
+  survives restart, and a new room works after recovery.
+- Health and linked health: 200 JSON. Expiry: 86,400 seconds. Unauthorised
+  room read: 401. Third join: 409. Burst recovery: 429 with `Retry-After: 1`.
+- Invalid room codes produce a specific validation message, and the game
+  remains usable after backend rate limiting.
+- Deterministic demo: six populated exhibits, persistent sample label, isolated
+  reset from `1/9` to `0/9`, win with four comparisons and five tokens left,
+  loss, replay, and restart.
+- Fresh desktop and phone first screens show the job, audience, action, board,
+  and an exhibit before scrolling, without overflow or console errors.
+- Keyboard, dialog focus, reduced motion, settings, route titles, legal pages,
+  links, security headers, and deliberate HTTP 404 behavior pass apart from
+  the reported manual accessibility defects.
+- URL verifier: pass. Automated Axe: no serious or critical violations.
+- Mobile Lighthouse: 99 performance, 100 accessibility, 100 best practices,
+  100 SEO; LCP 1,298 ms, CLS 0, TBT 139 ms.
+- Phone-class active play measured 60 fps.
+- No offline/update behavior is promised. No service worker is registered.
 
-## Earlier finding disposition
+## Earlier findings
 
-| Earlier finding | Current disposition |
-| --- | --- |
-| Verification 1–5: public room backend unavailable or lost after restart | Resolved at the deployment cause. The stable static origin now proxies the owned backend, and both release and full live suites pass after restart. |
-| Verification 1–2: unknown routes returned HTTP 200 | Remains resolved. The designed page returns HTTP 404. |
-| Verification 2: cases lacked distinct inference rules | Remains resolved. The case-rules claim passes all 20 distinct exhibit sets and rules. |
-| Verification 2: six public claims lacked registered tests | Remains resolved. All 17 registered claim commands pass independently. |
+The previous backend availability and restart-routing findings are resolved.
+The earlier incorrect 404 transport status, missing per-case inference rules,
+and six previously unregistered claims remain resolved. Verification 6 F-2 is
+a new 404 presentation issue; verification 6 F-3 identifies different privacy
+claims from those listed in verification 2.
 
-## Offer and remaining dependency
+## How to verify
 
-The researched offer is unchanged: **$6 USD once** for 19 additional curated
-cases, making 20 total. It is not a subscription. Public metadata is copied to
-`/work/.evidence/billing-offer.json`; the verb-first 82-character catalog copy
-is copied to `/work/.evidence/catalog-description.txt`.
+```sh
+npm ci
+npm test
+npm run build
+npm run verify:live
+```
 
-Checkout registration remains an external billing-operator dependency. The
-product still says purchases cannot begin until registration is complete.
-Recorded fixtures verify license grant and revocation behavior; no checkout or
-paid activation is claimed as live-tested. The free case and real two-player
-mode work without a purchase.
+Run every exact command in `.factory/claims.json` separately from a clean
+checkout. Then measure all visible `a`, `button`, and `input` boxes in a fresh
+390 × 844 touch context and inspect a real unknown URL at desktop and phone
+widths. The repaired version must have zero targets below 44 px, no 404 header
+overlap, the normal focus treatment on 404 controls, and one exact registered
+test for each public privacy claim.
 
-No AI feature was added because the brief explicitly excludes AI tutoring and
-the deterministic deduction loop does not need model inference. The existing
-original generated archive art remains on-thesis; no new image generation was
-needed for this routing repair.
+Evidence is status-only and contains no credentials, cookie values, room
+codes, player access values, or license values.
