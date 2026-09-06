@@ -53,11 +53,12 @@ hidden tabs; rendering follows `requestAnimationFrame`.
 
 ## Difficulty curve
 
-Each case has six objects, one free relation, and nine comparison tokens. The
-free case uses distinct shapes and direct wording. The paid pack adds denser
-starting layouts and varied exhibit sets, but never changes the controls. The
-information limit is fair: one known binary relation reduces the 720 possible
-orders enough for a nine-comparison worst-case decision tree.
+Each case has six objects, one free relation, one placement rule, and nine
+comparison tokens. The solver checks all 720 possible orders against the rule
+and known facts, then shows only relations shared by every remaining order.
+The 20 curated cases use 20 distinct exhibit sets and rotate through lightest,
+heaviest, adjacent, between, and one-between rules. The controls stay stable
+while the information pattern changes from case to case.
 
 ## Generated scene prompt
 

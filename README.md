@@ -13,6 +13,7 @@ changes do not touch normal solo progress.
 - One permanent free case with a complete win/loss loop.
 - Server-validated rooms for two independent browsers. Rooms expire after 24 hours.
 - A $6 USD one-time case pack with 19 more cases, for 20 total.
+- A different exhibit set and placement rule in every curated case.
 - Browser-local solo progress, sound choice, and reduced-motion choice.
 
 The paid pack uses only the Sociobot checkout and license API. It is not a

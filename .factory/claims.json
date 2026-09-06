@@ -7,11 +7,25 @@
     "sandbox": "fresh browser context at /demo; reveal adjacent facts, arrange the actual seeded order, submit, and assert the scored win screen"
   },
   {
+    "id": "five-minute-run",
+    "claim": "The deterministic sample can be completed in under five minutes.",
+    "where": "first-screen audience line and README",
+    "test": "npm run test:e2e -- --grep @claim:five-minute-run",
+    "sandbox": "fresh browser context at /demo; play the seeded case through its win screen and measure elapsed wall time below 300 seconds"
+  },
+  {
+    "id": "free-case-loop",
+    "claim": "The permanent free case has complete win, loss, and replay outcomes.",
+    "where": "free-case action and README",
+    "test": "npm run test:e2e -- --grep @claim:free-case-loop",
+    "sandbox": "fresh browser context at /; start the real free case, solve it, replay it, submit the known-wrong starting order, and assert both end screens"
+  },
+  {
     "id": "restart-reset",
     "claim": "Restart restores the active case and all nine comparison tokens.",
     "where": "game controls",
     "test": "npm run test:e2e -- --grep @claim:restart-reset",
-    "sandbox": "fresh /demo case; spend a comparison, confirm restart, then assert active state, 0/9 comparisons, and only the free clue"
+    "sandbox": "fresh /demo case; spend a comparison, confirm restart, then assert active state, 0/9 comparisons, and the original rule-based deductions"
   },
   {
     "id": "progress-persistence",
@@ -28,6 +42,13 @@
     "sandbox": "seed the real storage key, change and reset /demo, then assert the real value is untouched"
   },
   {
+    "id": "start-real-cleanup",
+    "claim": "Starting for real removes demo progress and starts a clean free case.",
+    "where": "demo banner, privacy page, and demo documentation",
+    "test": "npm run test:e2e -- --grep @claim:start-real-cleanup",
+    "sandbox": "change the isolated sample, select Start for real, then assert the demo key is gone and a new zero-comparison free case is active"
+  },
+  {
     "id": "settings-persist",
     "claim": "Sound and reduced-motion settings persist in this browser.",
     "where": "game settings and README",
@@ -40,6 +61,13 @@
     "where": "first-screen facts and privacy section",
     "test": "npm run test:e2e -- --grep @claim:solo-local-privacy",
     "sandbox": "record every request during a demo comparison and assert the product origin is the only origin and no credential fields exist"
+  },
+  {
+    "id": "control-inputs",
+    "claim": "Keyboard, mouse, and touch controls can each change an active case.",
+    "where": "README and game controls",
+    "test": "npm run test:e2e -- --grep @claim:control-inputs",
+    "sandbox": "fresh desktop and touch browser contexts; spend a comparison with mouse plus keyboard, reorder with an arrow key, then spend a comparison by touch"
   },
   {
     "id": "two-player-shared",
@@ -56,11 +84,32 @@
     "sandbox": "create a room through the live local API and assert its server expiry is 24 hours from creation"
   },
   {
+    "id": "two-player-limit",
+    "claim": "A room accepts two players and rejects a third.",
+    "where": "terms and README",
+    "test": "npm run test:e2e -- --grep @claim:two-player-limit",
+    "sandbox": "three independent request contexts; create and join a room, then assert the third join receives HTTP 409 and the full-room message"
+  },
+  {
     "id": "case-pack",
     "claim": "A $6 one-time license unlocks 19 paid cases, for 20 total.",
     "where": "paid section, license page, terms, and README",
     "test": "npm run test:e2e -- --grep @claim:case-pack",
     "sandbox": "recorded valid Sociobot verification fixture; assert the token leaves the URL and all 19 paid case choices appear beside the exact price"
+  },
+  {
+    "id": "case-rules",
+    "claim": "Each of the 20 curated cases has its own exhibit set and placement rule that changes deductions.",
+    "where": "game board, paid section, and README",
+    "test": "npm run test:unit -- --testNamePattern @claim:case-rules",
+    "sandbox": "generate all 20 curated cases; assert distinct rule text and exhibit sets, validate each hidden order against its rule, and prove the rule narrows the possible orders"
+  },
+  {
+    "id": "license-revocation",
+    "claim": "A refunded or revoked license stops unlocking paid cases after verification.",
+    "where": "terms",
+    "test": "npm run test:e2e -- --grep @claim:license-revocation",
+    "sandbox": "recorded valid then revoked Sociobot verification fixtures; assert paid choices appear after valid verification and disappear after revocation"
   },
   {
     "id": "steady-render",

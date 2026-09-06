@@ -18,7 +18,8 @@ Dynamic exhibit names add at most two words to the audited clue templates.
 | Start a case to compare and move the exhibits. | 9 | Pass |
 | The board is ready with six objects and one free clue. | 11 | Pass |
 | Each new comparison tells you which exhibit is lighter and spends one token. | 13 | Pass |
-| The known-order list adds facts implied by earlier comparisons. | 9 | Pass |
+| Each case adds one placement rule. | 6 | Pass |
+| The known-order list combines it with your comparisons. | 9 | Pass |
 | Move all six labels from lightest to heaviest, then submit the row. | 12 | Pass |
 | Solo games use local browser storage and need no account. | 10 | Pass |
 | Shared rooms store a room code and game results for 24 hours. | 12 | Pass |
@@ -28,7 +29,7 @@ Dynamic exhibit names add at most two words to the audited clue templates.
 | One-time purchase. | 2 | Pass |
 | No subscription. | 2 | Pass |
 | The free case stays playable. | 5 | Pass |
-| The purchase adds 19 curated cases with new exhibits, hidden orders, and starting clues. | 14 | Pass |
+| The purchase adds 19 curated cases with new exhibits, hidden orders, clues, and placement rules. | 15 | Pass |
 | Sociobot is the merchant of record. | 6 | Pass |
 | The separate billing operator must register checkout before purchases can begin. | 11 | Pass |
 | Select one exhibit, then another. | 5 | Pass |
@@ -36,7 +37,13 @@ Dynamic exhibit names add at most two words to the audited clue templates.
 | Use the arrow buttons to move each exhibit toward lightest or heaviest. | 12 | Pass |
 | Submit the row once. | 4 | Pass |
 | A wrong order ends the case. | 6 | Pass |
-| The free clue and every comparison can imply more known relations. | 11 | Pass |
+| The case rule, free clue, and every comparison can imply more known relations. | 14 | Pass |
+| [Exhibit] is the lightest exhibit. | 5–6 | Pass |
+| [Exhibit] is the heaviest exhibit. | 5–6 | Pass |
+| [Exhibit] sits directly before [exhibit]. | 6–8 | Pass |
+| [Exhibit] sits between [exhibit] and [exhibit]. | 7–10 | Pass |
+| Exactly one exhibit sits between [exhibit] and [exhibit]. | 9–11 | Pass |
+| [Number] relations known. [Number] possible orders remain. | 7 | Pass |
 | Order six museum exhibits with limited comparisons. | 7 | Pass |
 | Original generated archive artwork is used on this site. | 9 | Pass |
 
