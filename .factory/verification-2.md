@@ -61,12 +61,11 @@ LIVE_RESTART=1 BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e -- --
 /opt/fleet/lib/verify-url.sh https://orderly-chaos.sociobot.in /work/.evidence/orderly-chaos-repair-2-url
 ```
 
-The full live 16-scenario run passed after the routing repair. The final
-revision passed the focused delivery contract, access-isolation, and complete
-run checks. The Playwright Axe coverage in the suite found no serious or
-critical issues. Fresh desktop and 390 px phone screenshots showed no
-horizontal overflow or console errors; the title, audience sentence, and
-sample action were all visible before scrolling.
+The final full live 17-scenario run passed against the HTTPS origin. The
+Playwright Axe coverage in the suite found no serious or critical issues. Fresh
+desktop and 390 px phone screenshots showed no horizontal overflow or console
+errors; the title, audience sentence, and sample action were all visible before
+scrolling.
 
 ## Evidence
 

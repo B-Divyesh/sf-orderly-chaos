@@ -48,12 +48,12 @@ the deterministic win, restart, local persistence, demo isolation, settings,
 privacy, two independent browsers, 24-hour room expiry timestamp, case-pack
 fixture, and 50 fps render check. No declared claim is untested.
 
-The live 16-scenario browser suite passed after the routing repair. The final
-live revision then passed the delivery contract, room-access isolation,
-deterministic win, and fresh desktop/phone first-screen checks. Two independent
-browsers created, joined, solved, and read the same room; that state also
-survived an owned-app restart. The live rate-limit recovery scenario observed
-HTTP 429 with `Retry-After: 1`.
+The final 17-scenario browser suite passed against the HTTPS origin. It covers
+the delivery contract, room-access isolation, deterministic win, fresh
+desktop/phone layout, and every declared claim. Two independent browsers
+created, joined, solved, and read the same room; that state also survived an
+owned-app restart. The live rate-limit recovery scenario observed HTTP 429
+with `Retry-After: 1`.
 
 `/opt/fleet/lib/verify-url.sh` passed on the final HTTPS root: title,
 `lang=en`, one `<h1>`, one `<main>`, image alt text, labelled buttons, and no
