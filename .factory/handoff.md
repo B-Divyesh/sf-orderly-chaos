@@ -1,48 +1,96 @@
 # Handoff
 
-## Verification result
+## Outcome
 
-**FAIL — do not accept this live release.** See
-[`.factory/verification-1.md`](verification-1.md) for the authoritative
-independent QA report.
+**PASS — the live repair is complete.** Orderly Chaos is a five-minute browser
+deduction game for adults and teens. Players order six museum exhibits using
+limited comparisons, either solo or in a real asynchronous two-player room.
 
-Implementation reviewed: `07733f527a5263ccc4846d731d7202c4c6fee464`.
-Documentation reviewed: `e7808219f854c4a16e615ac7bb11f5959a511f02`.
+Live URL: <https://orderly-chaos.sociobot.in>
 
-The candidate builds and tests cleanly locally. `npm ci`, `npm test`,
-`npm run build`, and all ten exact claim commands passed. The local suite
-covers 5 unit tests, 3 Rust/SQLite tests, and 15 browser scenarios.
+The live implementation is `6635570ff1846153c8ff095d3700707134dd8cbd`.
+The documentation report revision is recorded after this handoff commit in
+the repository history. The live container reports the implementation SHA
+from `/health`.
 
-The published JavaScript is byte-identical to the candidate build, and solo
-play/demo work. However, the live subdomain currently routes product API,
-health, and unknown requests to a static SPA fallback:
+## Repair completed
 
-- `POST /api/rooms` returns 405 (`Allow: GET, HEAD, OPTIONS`), so an actual
-  visitor cannot create or join a two-player room.
-- `/health` returns HTML instead of service health JSON; SQLite persistence,
-  restart recovery, tenant isolation, and rate limiting cannot be accepted.
-- An unknown URL returns 200 rather than the required HTTP 404.
+The public hostname had been routed to a Static Web App fallback while the
+product's healthy Rust/SQLite container was serving elsewhere. This made room
+creation return HTTP 405, made `/health` return HTML, and sent unknown URLs as
+HTTP 200.
 
-Route the product subdomain to the owned Rust/Axum container and its `/data`
-SQLite mount, including `/api/*`, `/health`, and a real 404 response. Then
-rerun live two-browser room creation/solve, 24-hour expiry, restart
-persistence, 429/`Retry-After`, and 404 checks before release.
+The product was redeployed with its documented container command. The public
+hostname now reaches the product-owned Axum service. It keeps the existing
+`sf-orderly-chaos-data` volume mounted at `/data` and remains fixed at one
+minimum and one maximum replica.
 
-The $6 USD one-time case-pack offer remains honestly disabled pending billing
-registration. The UI does not claim checkout or activation has passed.
+- `POST /api/rooms` returns JSON from the authoritative room service.
+- `/health` returns HTTP 200 JSON with `status: "ok"` and the live build SHA.
+- An unknown URL returns the designed HTML page with HTTP 404.
+- A new `npm run verify:live` runtime contract checks those three outcomes
+  against the HTTPS hostname before release acceptance.
+- A browser regression check proves that a request without that browser's room
+  access cannot read an existing room.
 
-## Other verified checks
+See [`.factory/verification-2.md`](verification-2.md) for the repair evidence
+and the disposition of the earlier failed verification.
 
-- First screen shows the game, names the ordering-puzzle job, names adults and
-  teens as the audience, and offers the one-click sample action.
-- A live demo run reached a genuine win end screen; desktop and 390 px phone
-  screenshots were saved without credentials.
-- Live accessibility: URL verifier passed; Playwright Axe found no serious or
-  critical issues across the five public routes. Keyboard, reduced-motion,
-  invalid-input, legal-page, and privacy-clear-data checks passed.
-- Live Lighthouse measured performance 100, accessibility 100, best practices
-  100, and SEO 100 (LCP 1,306 ms; CLS 0; TBT 56 ms). The active-play 50 fps
-  claim passed.
+## Verification
 
-Evidence is in `/work/.evidence/`. It contains no credentials, tokens, or
-cookies.
+From the documented clean setup, `npm ci` completed with zero audit
+vulnerabilities. `npm test` passed with 5 deterministic game tests, 3
+Rust/SQLite tests, and 17 browser scenarios. `npm run build` passed and wrote
+`dist/`; the initial JavaScript remains 10.87 KB gzip and CSS 3.95 KB gzip.
+
+Every exact command in `.factory/claims.json` was run separately and passed:
+the deterministic win, restart, local persistence, demo isolation, settings,
+privacy, two independent browsers, 24-hour room expiry timestamp, case-pack
+fixture, and 50 fps render check. No declared claim is untested.
+
+The live 16-scenario browser suite passed after the routing repair. The final
+live revision then passed the delivery contract, room-access isolation,
+deterministic win, and fresh desktop/phone first-screen checks. Two independent
+browsers created, joined, solved, and read the same room; that state also
+survived an owned-app restart. The live rate-limit recovery scenario observed
+HTTP 429 with `Retry-After: 1`.
+
+`/opt/fleet/lib/verify-url.sh` passed on the final HTTPS root: title,
+`lang=en`, one `<h1>`, one `<main>`, image alt text, labelled buttons, and no
+console errors. Playwright Axe found no serious or critical issues across all
+public routes. Fresh desktop and 390 px phone browsers showed the game before
+scrolling with this title, audience, and first action:
+
+- Job: “Solve an ordering puzzle with limited comparisons.”
+- Audience: curious adults and teens seeking a five-minute deduction game.
+- First action: “Try it with sample data.”
+
+The final deterministic demo run reached the real **Case solved** screen.
+Evidence in `/work/.evidence/` contains only screenshots and status results;
+it contains no credentials, room access values, or cookies.
+
+## Paid offer and known gap
+
+The researched offer remains unchanged: a $6 USD one-time complete case pack
+with 19 paid cases, for 20 total. There is no subscription. The free case
+remains playable. Checkout registration is still an external dependency of
+the separate billing operator, so the UI honestly says purchases are pending
+and does not claim activation or checkout success. Public metadata remains in
+`.factory/billing-offer.json` and `/work/.evidence/billing-offer.json`.
+
+The research success measures (first-run solve rate and a second-case attempt
+rate) need user research. The product does not claim those results have been
+measured.
+
+## How to run and deploy
+
+```sh
+npm ci
+npm test
+npm run build
+WO_DATA_DIR=/data /opt/fleet/lib/deploy-container.sh orderly-chaos /work/repo Dockerfile 8080
+npm run verify:live
+```
+
+Use the container deployment, not a static-only deployment: real rooms require
+the product-owned Rust service and its durable SQLite mount.
