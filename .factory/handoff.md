@@ -1,113 +1,48 @@
 # Handoff
 
-## Outcome
+## Verification result
 
-Built and deployed Orderly Chaos as a complete browser deduction game. A player
-orders six museum exhibits from lightest to heaviest using one free clue and
-nine comparison tokens. A run has active play, correct and incorrect end
-screens, efficiency feedback, replay, restart, saved progress, sound settings,
-and reduced motion.
+**FAIL — do not accept this live release.** See
+[`.factory/verification-1.md`](verification-1.md) for the authoritative
+independent QA report.
 
-The deployed product supports solo play and real asynchronous two-player rooms.
-Two independent browsers receive separate access tokens, solve the same seeded
-case, and read server-validated results from authoritative SQLite state. Room
-codes expire after 24 hours.
+Implementation reviewed: `07733f527a5263ccc4846d731d7202c4c6fee464`.
+Documentation reviewed: `e7808219f854c4a16e615ac7bb11f5959a511f02`.
 
-Live URL: <https://orderly-chaos.sociobot.in>
+The candidate builds and tests cleanly locally. `npm ci`, `npm test`,
+`npm run build`, and all ten exact claim commands passed. The local suite
+covers 5 unit tests, 3 Rust/SQLite tests, and 15 browser scenarios.
 
-## Implementation and deployment
+The published JavaScript is byte-identical to the candidate build, and solo
+play/demo work. However, the live subdomain currently routes product API,
+health, and unknown requests to a static SPA fallback:
 
-- Live implementation SHA: `07733f527a5263ccc4846d731d7202c4c6fee464`
-- Initial complete-build SHA: `1f8bc8fbbe1d1114ca83ed0aaff17eda78ddd0ea`
-- Live revision: `sf-orderly-chaos--0000002`
-- Container image digest: `sha256:183eb16ed0f023bb788f31c3d9faa774fa22b1f729a010b11d0a3bb969e5d5d7`
-- Runtime: Rust/axum serving the Vite bundle and room API on port 8080
-- State: `/data/orderly-chaos.sqlite3` on `sf-orderly-chaos-data`
-- Scale: one minimum and one maximum replica
-- Health: `/health` returns status `ok` and the live implementation SHA
+- `POST /api/rooms` returns 405 (`Allow: GET, HEAD, OPTIONS`), so an actual
+  visitor cannot create or join a two-player room.
+- `/health` returns HTML instead of service health JSON; SQLite persistence,
+  restart recovery, tenant isolation, and rate limiting cannot be accepted.
+- An unknown URL returns 200 rather than the required HTTP 404.
 
-The work order initially classified deployment as static. The required
-authoritative two-player mode cannot work in a static-only bundle, so the
-product uses the permitted product-owned Rust/SQLite service. The free solo and
-demo paths remain browser-local.
+Route the product subdomain to the owned Rust/Axum container and its `/data`
+SQLite mount, including `/api/*`, `/health`, and a real 404 response. Then
+rerun live two-browser room creation/solve, 24-hour expiry, restart
+persistence, 429/`Retry-After`, and 404 checks before release.
 
-Azure Files does not provide SQLite-compatible byte-range locks. The production
-`/data` connection therefore uses SQLite's `unix-none` VFS and is safe only
-under the enforced one-replica bound. Local and test databases retain normal
-SQLite locking. Startup also retries transient database access errors.
+The $6 USD one-time case-pack offer remains honestly disabled pending billing
+registration. The UI does not claim checkout or activation has passed.
 
-## Paid offer
+## Other verified checks
 
-The researched offer is preserved as a $6 USD one-time complete case pack. The
-free case remains playable; a valid license unlocks 19 more curated cases, for
-20 total. The product implements return-token storage, daily verification,
-revocation handling, and manual license restore through the Sociobot API.
+- First screen shows the game, names the ordering-puzzle job, names adults and
+  teens as the audience, and offers the one-click sample action.
+- A live demo run reached a genuine win end screen; desktop and 390 px phone
+  screenshots were saved without credentials.
+- Live accessibility: URL verifier passed; Playwright Axe found no serious or
+  critical issues across the five public routes. Keyboard, reduced-motion,
+  invalid-input, legal-page, and privacy-clear-data checks passed.
+- Live Lighthouse measured performance 100, accessibility 100, best practices
+  100, and SEO 100 (LCP 1,306 ms; CLS 0; TBT 56 ms). The active-play 50 fps
+  claim passed.
 
-The separate billing operator has not registered checkout: the public checkout
-endpoint returned HTTP 404 on 2026-09-06. The UI therefore says checkout
-registration is pending and does not present a dead purchase link. Public offer
-metadata is in `.factory/billing-offer.json` and
-`/work/.evidence/billing-offer.json`. No checkout or paid activation is claimed
-as production-tested.
-
-## Verification
-
-From a fresh clone of the implementation commit:
-
-1. `npm ci` — passed with zero audit vulnerabilities.
-2. `npm test` — passed: 5 deterministic game tests, 3 Rust/SQLite tests, and 15
-   Playwright browser scenarios.
-3. `npm run build` — passed and produced `dist/`.
-4. Every command in `.factory/claims.json` ran separately and passed.
-
-Browser coverage includes a deterministic win, a real loss, replay, confirmed
-restart, reload persistence, demo reset/isolation, keyboard and arrow controls,
-touch layout, settings persistence, reduced motion, dialogs, browser-data
-clearing, invalid and boundary room inputs, designed 404, route titles, link
-crawl, security headers, and console-error checks.
-
-Production checks on 2026-09-06:
-
-- `/opt/fleet/lib/verify-url.sh` passed: HTTPS 200, correct title and language,
-  one `h1`, one `main`, alt text present, and no console errors.
-- The complete 15-test Playwright suite passed against the HTTPS origin.
-- The two-player test used two isolated browser contexts, not a bot or mock.
-- The shared room and solved result remained after an actual live revision
-  restart.
-- A parallel live API burst returned HTTP 429 with `Retry-After: 1`.
-- `/`, `/demo`, `/privacy`, `/terms`, and `/license` return 200. The deliberate
-  unknown route returns the designed 404 with HTTP 404.
-- Local Lighthouse: performance 100, accessibility 100, best practices 100,
-  SEO 100; LCP 1.6 s, CLS 0, total blocking time 60 ms.
-- Live mobile Lighthouse: performance 94, accessibility 100, best practices
-  100, SEO 100; LCP 1.4 s, CLS 0, total blocking time 280 ms.
-- Live 390×844 active play measured 60 fps over 2.5 seconds.
-- Initial JavaScript is 10.87 KB gzip; CSS is 3.95 KB gzip; the mobile hero is
-  42 KB WebP.
-
-Evidence is under `/work/.evidence/`: live desktop and phone first screens,
-the completed win screen, URL verification output, and local/live Lighthouse
-JSON reports. Screenshots and reports contain no credentials, license values,
-room access tokens, or cookies.
-
-## Design and privacy
-
-The original “surreal balance archive” visual system, palette, spacing, motion,
-and generated-art prompt are recorded in `.factory/design.md`. The accepted
-source image and provenance sidecar are in `assets/src/`; optimized WebP assets
-ship in `public/`. Generated imagery is disclosed in the footer.
-
-Solo and demo storage use separate localStorage namespaces. Room access stays
-in sessionStorage; the server stores only token hashes. There are no analytics,
-advertising scripts, remote fonts, or runtime AI features.
-
-## Known gap and next step
-
-The billing operator must register the offer from
-`/work/.evidence/billing-offer.json`. After registration, verify a real hosted
-checkout, return URL, license activation, and revocation, then enable the buy
-link. Do not mark that dependency complete based on a redirect alone.
-
-The research success measures (first-run solve rate and second-case attempt
-rate) need user testing; the product makes no claim that those targets have
-already been met.
+Evidence is in `/work/.evidence/`. It contains no credentials, tokens, or
+cookies.
