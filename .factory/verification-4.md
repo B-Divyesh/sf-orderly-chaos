@@ -6,6 +6,7 @@ are no new findings and no untested public claims.
 - Live URL: <https://orderly-chaos.sociobot.in>
 - Product implementation: `906bfe2bebd6049ce75819fa58197b7ebc6df605`
 - Deployed source revision: `0ed5e8234e61012dfcec92d5104317fe5c4b5c8c`
+- Verification documentation: `494a989d53a4f4096f9514a64af4b33a1a7e9fbf`
 - Container revision: `sf-orderly-chaos--0000007`
 - Verification date: 2026-09-06 UTC
 
