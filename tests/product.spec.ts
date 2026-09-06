@@ -154,6 +154,84 @@ test('@claim:solo-local-privacy solo demo sends no cross-origin requests', async
   await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
 });
 
+test('@claim:no-tracking-cookies play uses no analytics, tracking requests, or advertising cookies', async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const requests: Array<{ method: string; origin: string; type: string }> = [];
+  const setCookieHeaders: Array<Promise<string | null>> = [];
+  context.on('request', (request) => requests.push({
+    method: request.method(),
+    origin: new URL(request.url()).origin,
+    type: request.resourceType(),
+  }));
+  context.on('response', (response) => setCookieHeaders.push(response.headerValue('set-cookie')));
+  try {
+    await page.goto('/demo');
+    const [first, second] = firstUnknownPair();
+    await page.locator(`[data-compare="${first}"]`).click();
+    await page.locator(`[data-compare="${second}"]`).click();
+    await page.goto('/privacy');
+
+    const productOrigin = new URL(page.url()).origin;
+    expect(new Set(requests.map(({ origin }) => origin))).toEqual(new Set([productOrigin]));
+    expect(requests.filter(({ method }) => method !== 'GET')).toEqual([]);
+    expect(requests.filter(({ type }) => ['fetch', 'xhr', 'eventsource', 'websocket', 'ping'].includes(type))).toEqual([]);
+    expect((await Promise.all(setCookieHeaders)).filter(Boolean)).toEqual([]);
+    expect(await context.cookies()).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:clear-browser-data removes every saved Orderly Chaos browser-data category', async ({ page }) => {
+  await page.route(`${VERIFY_URL_PATTERN()}**`, async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ valid: true, reason: 'ok', expires_at: null }) });
+  });
+  await page.goto('/license?license=recorded-fixture-token');
+  await expect(page.locator('#license-status')).toContainText('All 20 cases');
+
+  await page.goto('/');
+  await page.locator('#start-solo').click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByLabel('Play short feedback sounds').check();
+  await page.getByRole('button', { name: 'Save settings' }).click();
+  await page.getByRole('button', { name: 'Create two-player room' }).click();
+  await expect(page.locator('.room-code')).toBeVisible();
+  await page.goto('/demo');
+  await page.goto('/privacy');
+
+  const productKeysBefore = await page.evaluate(() => ({
+    solo: localStorage.hasOwnProperty('orderly-chaos:game'),
+    demo: localStorage.hasOwnProperty('demo:orderly-chaos:game'),
+    settings: localStorage.hasOwnProperty('orderly-chaos:settings'),
+    license: localStorage.hasOwnProperty('sb_license:orderly-chaos'),
+    licenseVerdict: localStorage.hasOwnProperty('orderly-chaos:license-verdict'),
+    room: sessionStorage.hasOwnProperty('orderly-chaos:room'),
+  }));
+  expect(Object.values(productKeysBefore).every(Boolean)).toBe(true);
+  await page.evaluate(() => {
+    localStorage.setItem('unrelated:local', 'keep');
+    sessionStorage.setItem('unrelated:session', 'keep');
+  });
+
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Clear saved browser data' }).click();
+  await expect(page.locator('#clear-data-status')).toHaveText('Saved browser data was cleared.');
+  const storageAfter = await page.evaluate(() => ({
+    product: [
+      localStorage.getItem('orderly-chaos:game'),
+      localStorage.getItem('demo:orderly-chaos:game'),
+      localStorage.getItem('orderly-chaos:settings'),
+      localStorage.getItem('sb_license:orderly-chaos'),
+      localStorage.getItem('orderly-chaos:license-verdict'),
+      sessionStorage.getItem('orderly-chaos:room'),
+    ],
+    unrelated: [localStorage.getItem('unrelated:local'), sessionStorage.getItem('unrelated:session')],
+  }));
+  expect(storageAfter.product).toEqual([null, null, null, null, null, null]);
+  expect(storageAfter.unrelated).toEqual(['keep', 'keep']);
+});
+
 test('@claim:control-inputs mouse, keyboard, and touch all change a case', async ({ browser, page }) => {
   await page.goto('/demo');
   const pair = firstUnknownPair();
@@ -384,6 +462,70 @@ test('route titles, legal pages, and the designed 404 work', async ({ page, requ
   await page.goto('/does-not-exist');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page was not found');
   await expect(page.getByRole('link', { name: /Return to the ordering puzzle/ })).toBeVisible();
+});
+
+test('phone links and controls meet the 44 CSS pixel target minimum', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  try {
+    for (const path of ['/', '/demo', '/privacy', '/terms', '/license', '/missing-touch-target-check']) {
+      await page.goto(path);
+      const undersized = await page.locator('a, button, input').evaluateAll((elements) => elements.flatMap((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        const intentionallyHidden = style.display === 'none' || style.visibility === 'hidden' ||
+          (rect.width <= 1 && rect.height <= 1 && style.clipPath !== 'none');
+        if (intentionallyHidden || rect.width === 0 || rect.height === 0) return [];
+        if (rect.width >= 44 && rect.height >= 44) return [];
+        return [{
+          label: ((element as HTMLElement).innerText || element.getAttribute('aria-label') || element.tagName).trim(),
+          width: Number(rect.width.toFixed(1)),
+          height: Number(rect.height.toFixed(1)),
+        }];
+      }));
+      expect(undersized, `${path} has undersized interactive targets`).toEqual([]);
+    }
+  } finally {
+    await context.close();
+  }
+});
+
+test('the 404 skip link stays hidden until focus and never overlaps the wordmark', async ({ browser }) => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    const context = await browser.newContext({ viewport });
+    const page = await context.newPage();
+    try {
+      await page.goto('/missing-focus-check');
+      const skip = page.getByRole('link', { name: 'Skip to main content' });
+      await expect(skip).not.toBeInViewport();
+      await page.keyboard.press('Tab');
+      await expect(skip).toBeFocused();
+      await expect(skip).toBeInViewport();
+
+      const skipBox = await skip.boundingBox();
+      const wordmarkBox = await page.getByRole('link', { name: /Orderly Chaos/ }).boundingBox();
+      expect(skipBox).not.toBeNull();
+      expect(wordmarkBox).not.toBeNull();
+      expect(skipBox!.height).toBeGreaterThanOrEqual(44);
+      const overlaps = !(skipBox!.x + skipBox!.width <= wordmarkBox!.x ||
+        wordmarkBox!.x + wordmarkBox!.width <= skipBox!.x ||
+        skipBox!.y + skipBox!.height <= wordmarkBox!.y ||
+        wordmarkBox!.y + wordmarkBox!.height <= skipBox!.y);
+      expect(overlaps).toBe(false);
+
+      for (const link of await page.getByRole('link').all()) {
+        await link.focus();
+        const focusStyle = await link.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return { width: Number.parseFloat(style.outlineWidth), style: style.outlineStyle };
+        });
+        expect(focusStyle.width).toBeGreaterThanOrEqual(3);
+        expect(focusStyle.style).toBe('solid');
+      }
+    } finally {
+      await context.close();
+    }
+  }
 });
 
 test('keyboard, mobile, reduced motion, clear data, and accessibility basics', async ({ browser, page }) => {

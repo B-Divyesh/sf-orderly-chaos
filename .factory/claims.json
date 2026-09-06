@@ -63,6 +63,20 @@
     "sandbox": "record every request during a demo comparison and assert the product origin is the only origin and no credential fields exist"
   },
   {
+    "id": "no-tracking-cookies",
+    "claim": "Play uses no analytics, tracking requests, or advertising cookies.",
+    "where": "privacy section and privacy page",
+    "test": "npm run test:e2e -- --grep @claim:no-tracking-cookies",
+    "sandbox": "fresh isolated browser; play a demo comparison, visit privacy, and assert every request stays on the product origin, no data request occurs, and neither responses nor the browser contain cookies"
+  },
+  {
+    "id": "clear-browser-data",
+    "claim": "Clear saved browser data removes solo progress, demo progress, settings, room access, and the saved license.",
+    "where": "privacy page",
+    "test": "npm run test:e2e -- --grep @claim:clear-browser-data",
+    "sandbox": "create every stated data category through the product UI, clear it from the privacy page, assert every product value is absent, and assert unrelated browser values remain"
+  },
+  {
     "id": "control-inputs",
     "claim": "Keyboard, mouse, and touch controls can each change an active case.",
     "where": "README and game controls",
@@ -89,6 +103,13 @@
     "where": "terms and README",
     "test": "npm run test:e2e -- --grep @claim:two-player-limit",
     "sandbox": "three independent request contexts; create and join a room, then assert the third join receives HTTP 409 and the full-room message"
+  },
+  {
+    "id": "room-token-hash",
+    "claim": "The room service stores only hashed room access tokens in SQLite.",
+    "where": "privacy page",
+    "test": "npm run test:server -- claim_room_token_hash_room_access_is_hashed_at_rest",
+    "sandbox": "create a room through the production handler against fresh SQLite, then assert the stored value differs from the returned access token and equals its 64-character SHA-256 hash"
   },
   {
     "id": "case-pack",

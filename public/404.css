@@ -29,6 +29,9 @@ footer nav {
 }
 
 .wordmark {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   color: #172b3a;
   font: 700 20px Georgia, serif;
   text-decoration: none;
@@ -53,6 +56,20 @@ a {
   font-weight: 700;
 }
 
+header a,
+main a,
+footer a {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+}
+
+a:focus-visible {
+  outline: 3px solid #156a85;
+  outline-offset: 3px;
+}
+
 h1 {
   max-width: 10ch;
   margin: .25em 0;
@@ -66,8 +83,25 @@ h1 {
 
 .skip {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip:focus {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  height: auto;
+  min-height: 44px;
+  margin: 8px 16px 0;
+  clip-path: none;
+  border: 3px solid #172b3a;
+  background: #fffaf0;
+  padding: 8px 14px;
 }
 
 @media (max-width: 640px) {

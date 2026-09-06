@@ -95,20 +95,30 @@ a:hover {
 }
 
 .skip-link {
-  position: fixed;
+  position: absolute;
   z-index: 100;
-  left: 16px;
-  top: 12px;
-  transform: translateY(-150%);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link:focus {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  height: auto;
+  min-height: 44px;
+  margin: 8px 16px 0;
+  clip-path: none;
+  align-items: center;
   background: var(--paper-raised);
   color: var(--ink);
   border: 3px solid var(--ink);
   padding: 10px 16px;
   font-weight: 800;
-}
-
-.skip-link:focus {
-  transform: translateY(0);
 }
 
 .site-header {
@@ -122,6 +132,9 @@ a:hover {
 }
 
 .wordmark {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.25rem;
@@ -159,6 +172,11 @@ a:hover {
 }
 
 .site-nav a {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   color: var(--ink);
   font-weight: 700;
   text-decoration: none;
@@ -829,6 +847,15 @@ input[type="text"] {
 
 .site-footer a {
   color: #fffaf0;
+}
+
+.site-footer nav a,
+.paid-actions a,
+.legal-page a {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
 }
 
 .build-line {

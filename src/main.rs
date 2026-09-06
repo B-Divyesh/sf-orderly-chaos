@@ -790,6 +790,43 @@ mod tests {
         assert_eq!(count, 1);
     }
 
+    #[tokio::test]
+    async fn claim_room_token_hash_room_access_is_hashed_at_rest() {
+        let state = AppState {
+            db: Arc::new(Mutex::new(open_database(":memory:").unwrap())),
+            limits: Arc::new(Mutex::new(HashMap::new())),
+            dist: Arc::new(PathBuf::from("dist")),
+        };
+        let access = match create_room(
+            State(state.clone()),
+            HeaderMap::new(),
+            Json(CreateRoomRequest {
+                seed: Some("hash-storage-case".to_string()),
+            }),
+        )
+        .await
+        {
+            Ok(Json(access)) => access,
+            Err(_) => panic!("room creation should succeed"),
+        };
+
+        let stored_hash: String = state
+            .db
+            .lock()
+            .expect("db lock")
+            .query_row(
+                "SELECT token_hash FROM players WHERE room_code = ?1 AND player_number = 1",
+                params![&access.code],
+                |row| row.get(0),
+            )
+            .unwrap();
+
+        assert_ne!(stored_hash, access.player_token);
+        assert_eq!(stored_hash, hash_token(&access.player_token));
+        assert_eq!(stored_hash.len(), 64);
+        assert!(stored_hash.bytes().all(|byte| byte.is_ascii_hexdigit()));
+    }
+
     #[test]
     fn room_codes_and_seeds_reject_bad_boundaries() {
         assert!(valid_seed("abc"));
