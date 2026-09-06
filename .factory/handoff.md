@@ -2,71 +2,84 @@
 
 ## Outcome
 
-**FAIL — verification 6 found 3 findings and 3 untested public claims.**
+**PASS in repair verification — all three verification-6 findings are fixed.**
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Implementation candidate: `27713d6d1ff7870bea61eff169daa0405f0f3986`
-- Documentation baseline reviewed: `54ba1e8b4c90a34f08f3f3bf5f810b0a2d4235d0`
-- Report: `.factory/verification-6.md`
-- Evidence: `/work/.evidence/orderly-chaos-verify-6/`
+- Implementation SHA: `7883cfb`
+- Evidence: `/work/.evidence/orderly-chaos-repair-7/`
+- Assigned report: `.factory/verification-6.md`
 
-The implementation and its repaired deployment topology pass their functional
-checks. The live JavaScript is byte-identical to the clean candidate build,
-and health reports the full candidate SHA. The report-only verdict is FAIL
-because acceptance requires zero findings and zero untested public claims.
+The final live footer reports build `7883cfb`. The static deployment preserved
+the existing linked product-owned Rust/SQLite backend and its durable `/data`
+configuration.
 
-## Findings to address
+## Findings repaired
 
-1. **Major:** make every mobile link target at least 44 × 44 CSS px. The main
-   nav, wordmark, footer links, legal contact link, restore link, and 404 links
-   currently measure 16–27.9 px high.
-2. **Minor:** hide the 404 skip link until keyboard focus, prevent its box from
-   overlapping the wordmark, and give 404 controls the same designed 3 px
-   focus treatment as the main app.
-3. **Major:** register exact claim tests for the public statements about no
-   analytics/tracking/advertising cookies, complete browser-data removal, and
-   hashed room-token storage. The complete removal action passed an independent
-   manual check, but the claims contract requires a declared command.
-
-Do not change the established offer or claim checkout activation. The offer is
-still $6 USD once for 19 additional cases, 20 total, with no subscription.
-Checkout registration remains external and pending.
+1. Every visible link, button, and input now measures at least 44 × 44 CSS px
+   in a fresh 390 × 844 touch browser on `/`, `/demo`, `/privacy`, `/terms`,
+   `/license`, and the real HTTP 404 page.
+2. The 404 skip link is visually hidden until keyboard focus. When focused it
+   enters normal layout, does not overlap the wordmark at phone or desktop
+   widths, and uses the product's 3 px solid focus treatment. Every 404 link
+   uses the same focus treatment.
+3. `.factory/claims.json` now registers exact tests for no tracking or
+   advertising cookies, complete browser-data removal, and hashed room-token
+   storage. The browser-data test creates each stated category through the UI.
+   The SQLite test creates a room through the production handler and compares
+   the stored value with the returned access value without logging either.
 
 ## Verification completed
 
 - Clean `npm ci`: pass; 0 reported vulnerabilities.
-- `npm test`: pass — 6 Vitest, 3 Rust/SQLite, and 23 Playwright checks.
-- `npm run build`: pass; `dist/` produced. Initial JavaScript is 11,673 bytes
-  gzip and CSS is 4,144 bytes gzip.
-- All 17 declared claim commands: pass independently.
-- Full live suite with an owned revision restart: 23/23 pass.
-- Two real isolated clients share authoritative results. The room result
-  survives restart, and a new room works after recovery.
-- Health and linked health: 200 JSON. Expiry: 86,400 seconds. Unauthorised
-  room read: 401. Third join: 409. Burst recovery: 429 with `Retry-After: 1`.
-- Invalid room codes produce a specific validation message, and the game
-  remains usable after backend rate limiting.
-- Deterministic demo: six populated exhibits, persistent sample label, isolated
-  reset from `1/9` to `0/9`, win with four comparisons and five tokens left,
-  loss, replay, and restart.
-- Fresh desktop and phone first screens show the job, audience, action, board,
-  and an exhibit before scrolling, without overflow or console errors.
-- Keyboard, dialog focus, reduced motion, settings, route titles, legal pages,
-  links, security headers, and deliberate HTTP 404 behavior pass apart from
-  the reported manual accessibility defects.
-- URL verifier: pass. Automated Axe: no serious or critical violations.
-- Mobile Lighthouse: 99 performance, 100 accessibility, 100 best practices,
-  100 SEO; LCP 1,298 ms, CLS 0, TBT 139 ms.
+- `npm test`: pass — 6 Vitest, 4 Rust/SQLite, and 27 Playwright tests.
+- `npm run build`: pass; `dist/` produced.
+- Initial JavaScript: 11.72 KB gzip. CSS: 4.19 KB gzip.
+- Every one of the 20 exact claim commands: pass when run separately.
+- `npm run verify:live`: 2/2 pass. Two isolated clients shared an
+  authoritative result, the owned backend revision restarted, the result
+  persisted, and a fresh room could be created after recovery.
+- Final full live suite: 27/27 pass after the clean-SHA deployment.
+- URL verifier: HTTPS 200, correct title and language, one h1, main landmark,
+  alt text present, controls labelled, and no console errors.
+- Playwright Axe: no serious or critical violations on every public route or
+  the controls dialog.
+- Fresh desktop and phone browsers show the ordering job, audience, first
+  action, board, and an exhibit before scrolling, without horizontal overflow.
+- The one-click sample shows six named exhibits at 0/9, keeps its demo label,
+  resets independently, and leaves seeded normal progress unchanged.
+- Deterministic live play reaches the real win and loss screens. Replay and
+  restart reset the case.
 - Phone-class active play measured 60 fps.
-- No offline/update behavior is promised. No service worker is registered.
+- Mobile Lighthouse: 100 performance, 100 accessibility, 100 best practices,
+  and 100 SEO; LCP 1,208 ms, CLS 0, TBT 38 ms.
 
-## Earlier findings
+## Earlier finding disposition
 
-The previous backend availability and restart-routing findings are resolved.
-The earlier incorrect 404 transport status, missing per-case inference rules,
-and six previously unregistered claims remain resolved. Verification 6 F-2 is
-a new 404 presentation issue; verification 6 F-3 identifies different privacy
-claims from those listed in verification 2.
+| Finding | Current disposition |
+| --- | --- |
+| Verification 1–5: public room backend unavailable or lost after restart | Resolved. The linked backend again passed two-client sharing, restart persistence, health, recovery, and new-room checks. |
+| Verification 1–2: unknown routes returned HTTP 200 | Resolved. Unknown URLs return the designed HTML with HTTP 404. |
+| Verification 2: cases lacked distinct inference rules | Resolved. The case-rules claim covers all 20 curated cases. |
+| Verification 2: six public claims lacked registered tests | Resolved. Those six commands still pass. |
+| Verification 6: undersized mobile targets | Resolved with measured cross-route browser coverage. |
+| Verification 6: 404 skip-link overlap and default focus | Resolved at 390 px and 1440 px with keyboard-focus coverage. |
+| Verification 6: three privacy claims lacked tests | Resolved with three exact claim commands. |
+
+## Offer and remaining dependency
+
+The offer remains **$6 USD once** for 19 additional curated cases, making 20
+total, with no subscription. The permanent free case still works. Public
+metadata is present in `.factory/billing-offer.json` and copied to
+`/work/.evidence/billing-offer.json`.
+
+Checkout registration is still owned by the separate billing operator. The
+live purchase control remains disabled and says registration is pending. The
+tests use recorded license verification fixtures and do not claim that a live
+checkout or paid activation passed. No offline behavior is promised.
+
+The separately named `factory-evidence/orderly-chaos-verify-6/qa-report.md`
+was not mounted anywhere under `/work`; the complete repository copy in
+`.factory/verification-6.md` was used.
 
 ## How to verify
 
@@ -77,12 +90,12 @@ npm run build
 npm run verify:live
 ```
 
-Run every exact command in `.factory/claims.json` separately from a clean
-checkout. Then measure all visible `a`, `button`, and `input` boxes in a fresh
-390 × 844 touch context and inspect a real unknown URL at desktop and phone
-widths. The repaired version must have zero targets below 44 px, no 404 header
-overlap, the normal focus treatment on 404 controls, and one exact registered
-test for each public privacy claim.
+Run each exact command in `.factory/claims.json` separately. Then run the full
+suite against the public origin:
 
-Evidence is status-only and contains no credentials, cookie values, room
+```sh
+BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e
+```
+
+Evidence is status-only. It contains no credentials, cookie values, room
 codes, player access values, or license values.

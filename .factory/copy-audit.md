@@ -1,6 +1,8 @@
 # Landing copy audit
 
 Audited against the initial `/` render and its game dialogs on 2026-09-06.
+Rechecked after repair 7 against live implementation `7883cfb`; product copy
+did not change.
 Headings, labels, and buttons are included where they form a complete thought.
 Dynamic exhibit names add at most two words to the audited clue templates.
 
