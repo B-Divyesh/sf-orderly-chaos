@@ -5,8 +5,8 @@
 **PASS — the public multiplayer service survives an owned revision restart.**
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Deployed implementation: `d18376d0d0e4c18e1981b9f000bc8412cb9560c4`
-- Verification documentation revision: `74bc9d21e07c477a16700767a80436681af5bbd4`
+- Deployed implementation: `a1f64ae39dc18764310169be498ee7622e6dc0e4`
+- Verification documentation revision: recorded in the report-only follow-up commit
 - Verification report: `.factory/verification-5.md`
 
 The public CNAME had pointed at a stale static host. The owned Rust/SQLite
@@ -20,12 +20,16 @@ restarts the owned active revision and proves all four observable outcomes:
 health JSON, a persisted shared-room result, a newly created room, and a real
 HTTP 404 for an unknown route.
 
+The phone layout now keeps the active case and exhibit cards in the first
+390 × 844 px screen. The title, audience, sample action, real-case action, and
+sample-storage explanation remain before the interactive board.
+
 ## Verification completed
 
 - Fresh `npm ci`: pass; 0 reported vulnerabilities.
 - `npm test`: pass — 6 Vitest, 3 Rust/SQLite, and 23 Playwright checks.
-- `npm run build`: pass; `dist/` produced. Initial JavaScript is 11.71 KB gzip
-  and CSS is 3.98 KB gzip.
+- `npm run build`: pass; `dist/` produced. Initial JavaScript is 11.72 KB gzip
+  and CSS is 4.13 KB gzip.
 - All 17 exact commands in `.factory/claims.json`: pass individually against
   the documented local Rust/SQLite server.
 - `npm run verify:live`: pass — 2 restart-enabled public routing checks.
@@ -34,8 +38,9 @@ HTTP 404 for an unknown route.
   state after restart, room expiry, third-player rejection, access isolation,
   429 with `Retry-After`, and a fresh post-restart room creation.
 - Fresh desktop and phone browser contexts: pass. Both first screens show the
-  game, the job, audience, and **Try it with sample data** action. Phone width
-  is 390 CSS pixels with no horizontal overflow or console errors.
+  game, the job, audience, and **Try it with sample data** action. The 390 ×
+  844 phone view also shows active exhibit cards before scrolling. There is no
+  horizontal overflow or console error.
 - Demo: pass. `/demo` opens six populated exhibits with the persistent demo
   label, `0/9` comparisons, Reset demo, and Start for real. The isolated
   reset and normal-solo-data boundary passed in the live suite.
@@ -47,8 +52,8 @@ HTTP 404 for an unknown route.
   routes and the controls dialog. Keyboard, touch, mouse, focus, reduced
   motion, privacy clearing, route titles, legal pages, links, and 404 checks
   passed.
-- Mobile Lighthouse: performance 99, accessibility 100, best practices 100,
-  SEO 100; LCP 1,425 ms, CLS 0, TBT 95 ms.
+- Mobile Lighthouse: performance 100, accessibility 100, best practices 100,
+  SEO 100; LCP 1,427 ms, CLS 0, TBT 51 ms.
 
 ## Earlier findings
 
@@ -64,6 +69,7 @@ HTTP 404 for an unknown route.
 Status-only evidence is in `/work/.evidence/orderly-chaos-repair-5/`:
 
 - `live-desktop-first-screen.png` and `live-phone-first-screen.png`
+- `live-phone-390x844-first-screen.png`
 - `live-demo-populated.png` and `live-win-screen.png`
 - `verify-url.json` and `lighthouse.json`
 

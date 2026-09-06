@@ -4,8 +4,8 @@
 declared claims**.
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Deployed implementation: `d18376d0d0e4c18e1981b9f000bc8412cb9560c4`
-- Verification documentation revision: `74bc9d21e07c477a16700767a80436681af5bbd4`
+- Deployed implementation: `a1f64ae39dc18764310169be498ee7622e6dc0e4`
+- Verification documentation revision: report-only follow-up commit pending
 - Verification date: 2026-09-06 UTC
 
 ## Repair verified
@@ -15,7 +15,7 @@ served a stale static host. The public CNAME was restored by deploying the
 committed product container with its existing durable `/data` mount and
 one-replica SQLite bound. The healthy public runtime now returns:
 
-- `GET /health` → HTTP 200 JSON with implementation build `d18376d`
+- `GET /health` → HTTP 200 JSON with implementation build `a1f64ae`
 - `POST /api/rooms` → HTTP 200 JSON
 - `GET /not-a-product-route` → designed HTML, HTTP 404
 
@@ -29,6 +29,7 @@ restart-enabled live browser suite then passed all 23 checks.
 - Fresh 1440 × 900 desktop and fresh 390 px phone contexts showed the playable
   game first. The h1 names the job: “Solve an ordering puzzle with limited
   comparisons.” The audience and sample action are visible before scrolling.
+  At 390 × 844, the active exhibit cards are also visible before scrolling.
 - The one-click `/demo` route showed six exhibits, its persistent sample label,
   Reset demo, Start for real, and `0/9` comparisons. The full live suite
   proved reset and demo isolation from normal browser data.
@@ -46,14 +47,14 @@ restart-enabled live browser suite then passed all 23 checks.
 
 - Fresh `npm ci`: pass, 0 reported vulnerabilities.
 - `npm test`: pass — 32 checks total (6 Vitest, 3 Rust/SQLite, 23 Playwright).
-- `npm run build`: pass; `dist/` produced, with 11.71 KB gzip JavaScript and
-  3.98 KB gzip CSS.
+- `npm run build`: pass; `dist/` produced, with 11.72 KB gzip JavaScript and
+  4.13 KB gzip CSS.
 - All 17 exact claim commands ran independently and passed.
 - `/opt/fleet/lib/verify-url.sh`: pass with no console errors.
 - Live Playwright Axe: 0 serious or critical issues across public routes and
   the controls dialog.
-- Mobile Lighthouse: performance 99, accessibility 100, best practices 100,
-  SEO 100; LCP 1,425 ms, CLS 0, TBT 95 ms.
+- Mobile Lighthouse: performance 100, accessibility 100, best practices 100,
+  SEO 100; LCP 1,427 ms, CLS 0, TBT 51 ms.
 
 ## Earlier review disposition
 
