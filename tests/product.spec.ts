@@ -165,6 +165,24 @@ test('@claim:room-expiry server rooms expire in 24 hours', async ({ request }) =
   expect(room.expiresAt).toBeLessThanOrEqual(before + 86_405);
 });
 
+test('@release:server-routing delivers the room API, health JSON, and a real 404', async ({ request }) => {
+  const health = await request.get('/health');
+  expect(health.status()).toBe(200);
+  expect(health.headers()['content-type']).toContain('application/json');
+  await expect(health.json()).resolves.toMatchObject({ status: 'ok' });
+
+  const room = await request.post('/api/rooms', {
+    data: { seed: 'release-routing-check' },
+    headers: { 'x-forwarded-for': '198.51.100.88' },
+  });
+  expect(room.status()).toBe(200);
+  expect(room.headers()['content-type']).toContain('application/json');
+
+  const missing = await request.get('/not-a-product-route');
+  expect(missing.status()).toBe(404);
+  expect(missing.headers()['content-type']).toContain('text/html');
+});
+
 test('@claim:case-pack the one-time license unlocks all 20 cases', async ({ page }) => {
   await page.route(`${VERIFY_URL_PATTERN()}**`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ valid: true, reason: 'ok', expires_at: null }) });

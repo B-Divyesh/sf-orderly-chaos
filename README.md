@@ -56,6 +56,16 @@ WO_DATA_DIR=/data /opt/fleet/lib/deploy-container.sh orderly-chaos /work/repo Do
 Do not deploy the frontend without this service; that would make advertised
 two-player rooms unavailable.
 
+After deployment, verify that the public hostname reaches the service rather
+than a static fallback:
+
+```sh
+npm run verify:live
+```
+
+This outcome check requires health JSON, a successful room creation, and an
+HTTP 404 for an unknown URL. It does not print room access values.
+
 ## Documentation
 
 - Product scope: [`.factory/brief.json`](.factory/brief.json)

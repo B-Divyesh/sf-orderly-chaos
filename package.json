@@ -11,6 +11,7 @@
     "test:unit": "vitest run src",
     "test:server": "cargo test --locked",
     "test:e2e": "playwright test",
+    "verify:live": "BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e -- --grep @release:server-routing",
     "serve:test": "ORDERLY_DB_PATH=:memory: PORT=4173 cargo run --quiet --locked"
   },
   "devDependencies": {
