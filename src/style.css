@@ -917,32 +917,101 @@ dialog::backdrop {
   }
 
   .first-screen {
+    display: flex;
+    flex-direction: column;
     width: min(100% - 20px, 1420px);
     padding-top: 16px;
-  }
-
-  .intro-panel {
-    display: grid;
-    grid-template-columns: 1fr;
     gap: 18px;
   }
 
+  .intro-panel,
   .intro-copy {
-    gap: 16px;
+    display: contents;
+  }
+
+  .eyebrow {
+    order: 1;
   }
 
   h1 {
-    font-size: clamp(2.4rem, 12vw, 4rem);
+    order: 2;
+    max-width: none;
+    font-size: 2.1rem;
+    line-height: 1.04;
+  }
+
+  .audience-line {
+    order: 3;
+    font-size: 1rem;
+  }
+
+  .hero-actions {
+    order: 4;
+  }
+
+  .game-shell {
+    order: 5;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .facts {
+    order: 6;
   }
 
   .hero-figure {
     display: none;
   }
 
-  .game-header,
-  .game-instructions,
   .clue-panel {
     grid-template-columns: 1fr;
+  }
+
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding-top: 14px;
+    padding-bottom: 12px;
+  }
+
+  .game-title {
+    margin-bottom: 0;
+    font-size: 1.65rem;
+  }
+
+  .case-kicker {
+    font-size: .66rem;
+  }
+
+  .game-instructions {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: .9rem;
+  }
+
+  .game-stats {
+    gap: 3px 8px;
+  }
+
+  .game-stats dt {
+    font-size: .66rem;
+  }
+
+  .game-stats dd {
+    font-size: .95rem;
+  }
+
+  .status-message {
+    min-height: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: .9rem;
+  }
+
+  .exhibit-scroll {
+    padding-top: 12px;
   }
 
   .game-header,
@@ -1021,7 +1090,8 @@ dialog::backdrop {
 
   .hero-actions .button,
   .hero-actions button {
-    width: 100%;
+    flex: 1 1 150px;
+    width: auto;
     text-align: center;
   }
 }

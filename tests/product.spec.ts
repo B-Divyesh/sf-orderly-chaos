@@ -413,6 +413,8 @@ test('keyboard, mobile, reduced motion, clear data, and accessibility basics', a
     await phone.goto('/');
     await expect(phone.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(phone.getByRole('link', { name: 'Try it with sample data' })).toBeVisible();
+    await expect(phone.locator('#game-board')).toBeInViewport({ ratio: 0.1 });
+    await expect(phone.locator('[data-compare]').first()).toBeInViewport({ ratio: 0.1 });
     const bodyWidth = await phone.evaluate(() => ({ scroll: document.body.scrollWidth, client: document.documentElement.clientWidth }));
     expect(bodyWidth.scroll).toBeLessThanOrEqual(bodyWidth.client);
   } finally {
