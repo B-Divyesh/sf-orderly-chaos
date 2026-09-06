@@ -1,89 +1,132 @@
-# Verification 4 — PASS
+# Verification 4 — FAIL
 
-**Verdict: PASS.** The critical live shared-room finding is resolved. There
-are no new findings and no untested public claims.
+**Verdict: FAIL.** There is **1 critical finding** and **0 untested public
+claims**.
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Product implementation: `906bfe2bebd6049ce75819fa58197b7ebc6df605`
-- Deployed source revision: `0ed5e8234e61012dfcec92d5104317fe5c4b5c8c`
-- Verification documentation: `494a989d53a4f4096f9514a64af4b33a1a7e9fbf`
-- Container revision: `sf-orderly-chaos--0000007`
+- Reviewed implementation candidate: `906bfe2bebd6049ce75819fa58197b7ebc6df605`
+- Documentation revision at review: `46635f26ed590e76da762f4c64027ef78b186b9c`
 - Verification date: 2026-09-06 UTC
 
-## Repair
+The later commits after `906bfe2` only update factory documentation. The
+production JavaScript asset is byte-identical to the build from the reviewed
+implementation (`cac86eda0f6bd6e117527478c03595b2a817d19b02c2e5765a75f23cbef24a14`).
 
-The public origin previously served the static fallback for backend paths.
-The repository already contained the passing Rust/SQLite implementation, so
-the cause was repaired by deploying the owned `sf-orderly-chaos` container and
-binding `orderly-chaos.sociobot.in` to it.
+## First screen and game run
 
-The live configuration reports one minimum and one maximum replica. The
-product-owned durable share `sf-orderly-chaos-data` is mounted at `/data`.
-The service needs no secret configuration and uses no shared PostgreSQL.
+Fresh 1440 x 900 desktop and 390 x 844 phone browsers showed the playable game
+on the first screen. Before scrolling they stated:
 
-## Live backend evidence
+- Job: “Solve an ordering puzzle with limited comparisons.”
+- Audience: curious adults and teens who want a five-minute deduction game.
+- First action: “Try it with sample data,” which says it opens a complete case
+  without changing saved play.
 
-- `GET /health` returned HTTP 200 JSON with `status: ok` and deployed source
-  revision `0ed5e8234e61012dfcec92d5104317fe5c4b5c8c`.
-- `POST /api/rooms` created a room.
-- Two fresh, independent browser contexts joined the same room. After the
-  first solved the seeded case, the second retrieved its solved result.
-- The owned container revision was restarted during that test. The room and
-  solved result remained available afterward.
-- A request without that room's access value received HTTP 401.
-- A third join received HTTP 409 with the full-room explanation.
-- The returned expiry was within five seconds of exactly 24 hours.
-- A request burst reached HTTP 429 with `Retry-After: 1`; health still
-  returned 200.
-- An unknown route returned the designed HTML page with HTTP 404.
+Both views showed the free $6-once, 19-case-pack price, browser-local solo
+storage, and 24-hour room-code fact. There was no horizontal overflow or
+console error. The one-click demo displayed six populated exhibits and the
+persistent “Demo — Sample data. Nothing is saved to your real game” label.
+Reset restored the sample to 0/9 comparisons and did not change normal solo
+data.
 
-Room codes and access values were used only in ephemeral test contexts. They
-were not printed or retained in evidence.
+A deterministic live demo run reached the real **Case solved** end screen and
+offered replay. The full live suite also passed the loss, replay, restart,
+settings, mouse, keyboard, touch, frame-rate, privacy, route, legal, 404, and
+accessibility paths that do not depend on the room service.
 
-## Product and quality evidence
+## Finding
 
-- Clean `npm ci`: pass, 0 vulnerabilities.
-- `npm test`: 32/32 pass (6 unit, 3 Rust/SQLite, 23 browser).
-- `npm run build`: pass and `dist/` produced.
-- All 17 exact `.factory/claims.json` commands: pass individually.
-- Full public suite with restart enabled: 23/23 pass.
-- Fresh desktop and phone first screens name the task, audience, first action,
-  price, persistence boundary, and room expiry. No overflow or console errors
-  were observed.
-- The sample loaded six populated exhibits with a persistent demo label. Demo
-  reset and normal-data isolation passed.
-- A deterministic public run reached the real `Case solved` screen with four
-  comparisons. Loss, replay, and restart also passed.
-- Keyboard, mouse, touch, focus, reduced motion, local data clearing, routes,
-  links, privacy, terms, and designed 404 checks passed.
-- Playwright Axe found no serious or critical issues across all public routes
-  and the controls dialog.
-- `verify-url.sh` passed the live root with no console errors.
-- Lighthouse scored 100 for performance, accessibility, best practices, and
-  SEO. LCP was 1,426 ms, CLS 0, and total blocking time 48 ms.
-- Initial JavaScript is 33,955 bytes and CSS is 13,764 bytes uncompressed.
-- The active-play phone-class profile met the registered 50 fps minimum.
+### F-1 — Critical: the room service does not survive a product revision restart
+
+The required authoritative multiplayer service initially worked: two isolated
+browser contexts created and joined one room, and the second read the first
+player's solved result. The test then restarted the owned active product
+revision, as required to verify durable SQLite persistence. The public origin
+did not recover the Rust/SQLite runtime after that restart.
+
+Direct checks after recovery time showed:
+
+- `GET /health` → HTTP 404 `text/html`, instead of 200 health JSON.
+- `POST /api/rooms` → HTTP 405, rather than creating a room.
+- A 12-request create burst returned 405 responses rather than 429 with
+  `Retry-After: 1`.
+- The designed unknown-route page still returned the correct HTTP 404. This is
+  expected behavior and is not a finding.
+
+The post-restart live Playwright suite finished with **17 passed and 6 failed**.
+The failures are the shared-room restart-persistence path, room expiry,
+two-player boundary, health/API/404 release routing, unauthorised-room setup,
+and rate-limit recovery. The failed room setup makes post-restart access
+isolation unavailable as well.
+
+This regresses the repair asserted by the previous verification-4 report. A
+restart must keep the product hostname routed to the owned container, including
+`/health` and `/api/*`, before this product can pass. Rerun two independent
+browser clients, room expiry, third-player rejection, unauthorised access,
+429/`Retry-After`, and durable-state checks after the recovery.
+
+## Declared claims
+
+After `npm ci`, all 17 exact commands in `.factory/claims.json` passed
+individually against the documented clean local Rust/SQLite test server.
+`npm test` also passed locally: 6 Vitest tests, 3 Rust/SQLite tests, and 23
+Playwright tests. `npm run build` produced `dist/`.
+
+| Claim ID | Local exact command | Live disposition |
+| --- | --- | --- |
+| complete-run | Pass | Pass |
+| five-minute-run | Pass | Pass |
+| free-case-loop | Pass | Pass |
+| restart-reset | Pass | Pass |
+| progress-persistence | Pass | Pass |
+| demo-isolation | Pass | Pass |
+| start-real-cleanup | Pass | Pass |
+| settings-persist | Pass | Pass |
+| solo-local-privacy | Pass | Pass |
+| control-inputs | Pass | Pass |
+| two-player-shared | Pass | **Fail after restart — F-1** |
+| room-expiry | Pass | **Fail after restart — F-1** |
+| two-player-limit | Pass | **Fail after restart — F-1** |
+| case-pack | Pass (recorded fixture) | Pass (recorded fixture; no checkout claimed) |
+| case-rules | Pass | Pass |
+| license-revocation | Pass (recorded fixture) | Pass (recorded fixture) |
+| steady-render | Pass | Pass (at least 50 fps phone-class profile) |
+
+Untested declared claims: **0**. The $6 USD offer remains a one-time purchase
+for 19 additional cases, 20 total. Checkout registration remains pending, and
+no checkout or live paid activation was claimed.
 
 ## Earlier findings
 
-| Finding | Current disposition |
+| Earlier finding | Current disposition |
 | --- | --- |
-| Verification 1 F-1 / verification 2 F-1 / verification 3 F-1: room backend unavailable | Resolved. Public health, room creation, two-client sharing, expiry, access isolation, restart persistence, and rate-limit recovery pass. |
-| Verification 1 F-2 / verification 2 F-2: unknown route returned 200 | Remains resolved. The live response is HTTP 404 with the designed page. |
-| Verification 2 F-3: per-case inference rule missing | Remains resolved. The claim test covers 20 distinct exhibit sets and placement rules that narrow valid orders. |
-| Verification 2 F-4: six public claims were absent | Remains resolved. The registry contains 17 claims, and every exact command passed. |
+| Verification 1/2/3 F-1: live room backend unavailable | **Regressed as F-1 after an owned revision restart.** It works before the restart but is unavailable after recovery. |
+| Verification 1/2 F-2: unknown route returned HTTP 200 | Remains resolved. A fresh unknown URL returns the designed page with HTTP 404. |
+| Verification 2 F-3: per-case inference rule missing | Remains resolved. The local `case-rules` claim passed all 20 exhibit-set/rule assertions. |
+| Verification 2 F-4: public claims missing from the registry | Remains resolved. The registry contains 17 claims, each run individually. |
 
-## Offer status
+## Other checks
 
-The public offer remains $6 USD once for 19 additional cases, 20 total, with
-no subscription. Checkout registration is still pending with the separate
-billing operator. The product does not claim that checkout or activation has
-passed. Valid and revoked license behavior passed recorded-fixture tests.
+- Live `npm run verify:live`: **failed**, correctly identifying `/health` as
+  HTTP 404 after the restart.
+- `/opt/fleet/lib/verify-url.sh` passed the live root: HTTPS 200, title,
+  `lang=en`, one `h1`, `main`, image alt text, labelled controls, and no
+  console errors.
+- Live Playwright Axe checks across public routes and the controls dialog
+  passed with no serious or critical issues. Keyboard, visible focus,
+  reduced-motion, mobile, local-data clearing, route-title, legal-page, link,
+  and designed-404 checks passed.
+- The registered active-play measurement passed the 50 fps minimum in the
+  phone-class browser profile. No offline claim is made.
 
 ## Evidence
 
-Status-only evidence is stored in
-`/work/.evidence/orderly-chaos-repair-4/`. Public catalog and billing metadata
-are copied to `/work/.evidence/catalog-description.txt` and
-`/work/.evidence/billing-offer.json`. No credentials, cookies, room access
-values, or tokens are present.
+Status-only evidence is in `/work/.evidence/orderly-chaos-verify-4/`:
+
+- `live-desktop-first-screen.png`, `live-phone-first-screen.png`, and
+  `first-screen-and-demo.json`
+- `live-demo-populated.png` and `live-win-screen.png`
+- `verify-url/verify.json`
+
+The report and evidence contain no credentials, cookies, room codes, access
+values, or license tokens.
