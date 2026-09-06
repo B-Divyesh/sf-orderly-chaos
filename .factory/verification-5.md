@@ -1,78 +1,143 @@
-# Verification 5 — PASS
+# Verification 5 — FAIL
 
-**Verdict: PASS.** There are **0 current product findings** and **0 untested
-declared claims**.
+**Verdict: FAIL.** There is **1 critical finding** and **0 untested public
+claims**.
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Deployed implementation: `a1f64ae39dc18764310169be498ee7622e6dc0e4`
-- Verification documentation revision: `d9582659e36b1cb4994c9cd76d6b882e6200c07d`
+- Reviewed implementation: `a1f64ae39dc18764310169be498ee7622e6dc0e4`
+- Documentation revision at review: `23a60066c267d25afff8ed0bcaed9ddf2fbc5b6d`
 - Verification date: 2026-09-06 UTC
 
-## Repair verified
+The live JavaScript is byte-identical to the fresh production build from the
+reviewed implementation lineage (`e4610ff1…`). Commits after `a1f64ae` only
+changed factory reports.
 
-The owned product container served `/health` as JSON while the public hostname
-served a stale static host. The public CNAME was restored by deploying the
-committed product container with its existing durable `/data` mount and
-one-replica SQLite bound. The healthy public runtime now returns:
+## First screen and complete run
 
-- `GET /health` → HTTP 200 JSON with implementation build `a1f64ae`
-- `POST /api/rooms` → HTTP 200 JSON
-- `GET /not-a-product-route` → designed HTML, HTTP 404
+Fresh 1440 × 900 desktop and 390 × 844 phone contexts showed the playable
+board before scrolling, without horizontal overflow or console errors.
 
-`npm run verify:live` passed after an owned revision restart. It confirmed the
-health body, a solved room persisted across restart, a second room could be
-created after recovery, and the deliberate 404 remained correct. The full
-restart-enabled live browser suite then passed all 23 checks.
+- Job: **“Solve an ordering puzzle with limited comparisons.”**
+- Audience: curious adults and teens who want a five-minute deduction game.
+- First action: **“Try it with sample data,”** with an explanation that the
+  sample does not change saved play.
+- Phone and desktop also showed the active board and an exhibit before
+  scrolling.
 
-## Product checks
+The one-click demo opened six populated exhibits at `0/9` comparisons. Its
+persistent label said **“Demo — Sample data. Nothing is saved to your real
+game”** and included **Reset demo** and **Start for real**. Reset and storage
+isolation passed.
 
-- Fresh 1440 × 900 desktop and fresh 390 px phone contexts showed the playable
-  game first. The h1 names the job: “Solve an ordering puzzle with limited
-  comparisons.” The audience and sample action are visible before scrolling.
-  At 390 × 844, the active exhibit cards are also visible before scrolling.
-- The one-click `/demo` route showed six exhibits, its persistent sample label,
-  Reset demo, Start for real, and `0/9` comparisons. The full live suite
-  proved reset and demo isolation from normal browser data.
-- A deterministic live run reached the real win screen. Loss, replay, restart,
-  settings, keyboard, pointer, touch, reduced motion, privacy clearing, legal
-  routes, links, and the designed 404 passed.
-- Two independent browser contexts created and joined a room, then one player
-  solved it and the other read the authoritative server result. Expiry,
-  two-player boundary, unauthorised access, rate-limit recovery, and persisted
-  restart state passed.
-- No offline claim is made. Solo play remains local-first; the two-player mode
-  uses only the product-owned server.
+A deterministic live run used four comparisons, arranged all six exhibits,
+and reached the real **Case solved** screen with five tokens remaining. The
+end screen showed the complete order and **Play this case again**. The live
+suite also passed loss, replay, restart, settings, keyboard, mouse, touch,
+reduced-motion, privacy-clearing, legal, and designed-404 paths.
 
-## Quality checks
+## Finding
 
-- Fresh `npm ci`: pass, 0 reported vulnerabilities.
-- `npm test`: pass — 32 checks total (6 Vitest, 3 Rust/SQLite, 23 Playwright).
-- `npm run build`: pass; `dist/` produced, with 11.72 KB gzip JavaScript and
-  4.13 KB gzip CSS.
-- All 17 exact claim commands ran independently and passed.
-- `/opt/fleet/lib/verify-url.sh`: pass with no console errors.
+### F-1 — Critical: public multiplayer routing fails after revision restart
+
+Two independent browser contexts successfully created and joined one room,
+and the second browser read the first player's server-validated solved result.
+The required restart test then restarted only the active owned
+`sf-orderly-chaos` revision. The public hostname did not recover the product
+runtime within the test's 180-second limit.
+
+Fresh direct checks after the timeout returned:
+
+- `GET /health` → **404 `text/html`**, not 200 health JSON.
+- `POST /api/rooms` → **405**, so no new room can be created.
+- Twelve room-create requests → 405, not the required 429 with
+  `Retry-After: 1`.
+- `GET /independent-qa-missing-route` → the designed HTML with **HTTP 404**.
+  This is expected and is not a defect.
+
+The owned container itself remains active and healthy with one replica. Its
+direct endpoint returns 200 JSON and reports build `a1f64ae`. The failure is
+therefore the public hostname reverting to the static host after revision
+restart, not a stopped container or a failing application health endpoint.
+
+The restart-enabled live suite finished with **17 passed and 6 failed**. The
+six failures were shared-room recovery, room expiry, the third-player limit,
+health/API routing, unauthorised-room-access setup, and 429 recovery. The
+documented `npm run verify:live` command independently failed both of its
+release checks in the same public state.
+
+This is the recurrence of verification 4 F-1. Restore the public product
+hostname to the healthy owned runtime and make that routing survive an owned
+revision restart. Then repeat two-client sharing, persisted result recovery,
+new-room creation, expiry, third-player rejection, access isolation, and
+429/`Retry-After` after restart.
+
+## Declared claims
+
+From the clean documented setup, all 17 exact commands in
+`.factory/claims.json` were run separately and passed against the local
+Rust/SQLite service. No declared claim was skipped.
+
+| Claim ID | Local exact command | Live disposition |
+| --- | --- | --- |
+| complete-run | Pass | Pass |
+| five-minute-run | Pass | Pass |
+| free-case-loop | Pass | Pass |
+| restart-reset | Pass | Pass |
+| progress-persistence | Pass | Pass |
+| demo-isolation | Pass | Pass |
+| start-real-cleanup | Pass | Pass |
+| settings-persist | Pass | Pass |
+| solo-local-privacy | Pass | Pass |
+| control-inputs | Pass | Pass |
+| two-player-shared | Pass | **Fail after restart — F-1** |
+| room-expiry | Pass | **Fail after restart — F-1** |
+| two-player-limit | Pass | **Fail after restart — F-1** |
+| case-pack | Pass (recorded fixture) | Pass (recorded fixture) |
+| case-rules | Pass | Pass |
+| license-revocation | Pass (recorded fixture) | Pass (recorded fixture) |
+| steady-render | Pass | Pass |
+
+Untested public claims: **0**. Failed live claims are findings, not untested
+claims.
+
+## Other checks
+
+- Fresh `npm ci`: pass; 0 reported vulnerabilities.
+- `npm test`: pass — 6 Vitest, 3 Rust/SQLite, and 23 Playwright checks.
+- `npm run build`: pass; `dist/` produced. Initial JavaScript is 11.72 KB
+  gzip and CSS is 4.13 KB gzip.
+- `/opt/fleet/lib/verify-url.sh`: pass — HTTPS 200, `lang=en`, one h1, main
+  landmark, image alt text, labelled buttons, and no console errors.
 - Live Playwright Axe: 0 serious or critical issues across public routes and
-  the controls dialog.
-- Mobile Lighthouse: performance 100, accessibility 100, best practices 100,
-  SEO 100; LCP 1,427 ms, CLS 0, TBT 51 ms.
+  the controls dialog. Keyboard operation, visible focus, reduced motion,
+  mobile layout, and browser-data clearing passed.
+- Fresh mobile Lighthouse: performance 100, accessibility 100, best
+  practices 100, SEO 100; LCP 1,203 ms, CLS 0, TBT 70 ms.
+- All public routes, product assets, the external factory link, route titles,
+  legal pages, and the designed 404 responded as intended. No offline or
+  update behavior is promised.
+- Security headers include CSP, `nosniff`, referrer policy, permissions
+  policy, and frame denial.
 
-## Earlier review disposition
+## Earlier finding disposition
 
-| Finding | Disposition |
+| Earlier finding | Current disposition |
 | --- | --- |
-| Verification 1–4 F-1, static routing replaced room service | Resolved by restoring the public product hostname to the healthy owned container. Restart recovery is now part of `verify:live`. |
-| Verification 1–2 F-2, HTTP 200 on missing route | Resolved and rechecked: designed 404 is HTTP 404. |
-| Verification 2 F-3, cases lacked distinct inference rules | Resolved; the 20-case rule claim passes. |
-| Verification 2 F-4, claims missing tests | Resolved; all 17 registered public claims passed separately. |
+| Verification 1–4 F-1: public room backend unavailable or lost after restart | **Recurred as F-1 after the required owned revision restart.** |
+| Verification 1–2 F-2: unknown route returned HTTP 200 | Remains resolved; the designed missing page returns HTTP 404. |
+| Verification 2 F-3: cases lacked distinct inference rules | Remains resolved; the claim passes 20 distinct exhibit sets and rules. |
+| Verification 2 F-4: public claims lacked registered tests | Remains resolved; all 17 registered commands ran separately. |
 
 ## Paid content and evidence
 
-The researched paid deliverable remains $6 USD once for 19 additional curated
-cases (20 total), with no subscription. Checkout registration remains an
-external dependency and is honestly unavailable; no purchase or entitlement
-claim is made.
+The complete public offer remains clear: **$6 USD once** for 19 additional
+curated cases, 20 total, with **no subscription**. Checkout registration is
+still an external billing dependency and the live UI accurately says purchases
+cannot begin. No checkout or paid activation is claimed as verified.
 
-Status-only evidence is in `/work/.evidence/orderly-chaos-repair-5/`. The
-catalog description copy is at `/work/.evidence/catalog-description.txt`.
-Neither contains credentials, cookie values, room codes, player tokens, or
-license values.
+Status-only evidence is in
+`/work/.evidence/orderly-chaos-verify-5-independent/`, including fresh phone,
+desktop, populated-demo, and win-screen images; first-screen results;
+Lighthouse JSON; URL verification; and redacted backend status. Evidence and
+this report contain no credentials, cookie values, room codes, player tokens,
+or license values.
