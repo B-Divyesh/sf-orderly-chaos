@@ -119,6 +119,10 @@ async fn main() {
 fn app(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
+        // Azure Static Web Apps forwards its linked backend under /api.
+        // Keep the direct route for container probes and expose this alias so
+        // the public /health rewrite reaches the same readiness check.
+        .route("/api/health", get(health))
         .route("/api/rooms", post(create_room))
         .route("/api/rooms/{code}/join", post(join_room))
         .route("/api/rooms/{code}", get(get_room))

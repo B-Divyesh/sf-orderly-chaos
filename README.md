@@ -46,20 +46,35 @@ Then open <http://localhost:8080/demo>.
 
 ## Runtime and deployment
 
-The Rust server serves `dist/` and owns room state. In production it writes
-SQLite to `/data/orderly-chaos.sqlite3`, runs as one replica, and needs only
-`PORT`. The factory deployment command is:
+The public site uses Azure Static Web Apps for the built frontend. Its linked
+backend sends `/api/*` to the product-owned Rust service. The static routing
+configuration rewrites public `/health` to `/api/health`, so release checks
+exercise the linked service without moving the product CNAME between hosts.
+
+The Rust service owns room state. In production it writes SQLite to
+`/data/orderly-chaos.sqlite3`, runs as one replica, and needs only `PORT`.
+Deploy the backend with:
 
 ```sh
 WO_DATA_DIR=/data /opt/fleet/lib/deploy-container.sh orderly-chaos /work/repo Dockerfile 8080
 ```
 
-Do not deploy the frontend without this service; that would make advertised
-two-player rooms unavailable.
+Then link the owned container to the existing Standard static site once:
 
-After deployment, verify that the public hostname reaches the service rather
-than a static fallback. This checks health JSON, room creation, a deliberate
-404, and persisted room results after one owned revision restart:
+```sh
+az staticwebapp backends link \
+  --resource-group sociobot \
+  --name sf-orderly-chaos \
+  --backend-resource-id /subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/sociobot/providers/Microsoft.App/containerApps/sf-orderly-chaos
+```
+
+Static releases may then keep the product hostname on the static site without
+disconnecting two-player rooms. Preserve the backend's `/data` mount and its
+one-replica minimum and maximum.
+
+After deployment, verify that the public hostname reaches the linked service.
+This checks health JSON, room creation, a deliberate 404, and persisted room
+results after one owned revision restart:
 
 ```sh
 npm run verify:live

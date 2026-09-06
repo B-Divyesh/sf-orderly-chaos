@@ -267,6 +267,11 @@ test('@release:server-routing delivers the room API, health JSON, and a real 404
   expect(health.headers()['content-type']).toContain('application/json');
   await expect(health.json()).resolves.toMatchObject({ status: 'ok' });
 
+  const linkedHealth = await request.get('/api/health');
+  expect(linkedHealth.status()).toBe(200);
+  expect(linkedHealth.headers()['content-type']).toContain('application/json');
+  await expect(linkedHealth.json()).resolves.toMatchObject({ status: 'ok' });
+
   const room = await request.post('/api/rooms', {
     data: { seed: 'release-routing-check' },
     headers: { 'x-forwarded-for': '198.51.100.88' },

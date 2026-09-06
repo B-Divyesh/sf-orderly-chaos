@@ -7,6 +7,7 @@
     { "route": "/privacy", "rewrite": "/index.html" },
     { "route": "/terms", "rewrite": "/index.html" },
     { "route": "/license", "rewrite": "/index.html" },
+    { "route": "/health", "rewrite": "/api/health" },
     { "route": "/favicon.svg", "headers": { "Cache-Control": "public, max-age=604800" } },
     { "route": "/apple-touch-icon.png", "headers": { "Cache-Control": "public, max-age=604800" } },
     { "route": "/social-card.webp", "headers": { "Cache-Control": "public, max-age=604800" } },
