@@ -16,6 +16,13 @@ export interface Comparison {
   heavier: string;
 }
 
+export type CaseRule =
+  | { kind: 'lightest'; exhibit: string }
+  | { kind: 'heaviest'; exhibit: string }
+  | { kind: 'adjacent'; lighter: string; heavier: string }
+  | { kind: 'between'; lighter: string; middle: string; heavier: string }
+  | { kind: 'one-between'; lighter: string; heavier: string };
+
 export interface GameState {
   seed: string;
   proposal: string[];
@@ -35,7 +42,8 @@ export interface CaseDefinition {
   hiddenOrder: string[];
   startingOrder: string[];
   given: Comparison;
-  ruleLabel: string;
+  rule: CaseRule;
+  ruleText: string;
 }
 
 const COLLECTIONS = [
@@ -44,12 +52,25 @@ const COLLECTIONS = [
   ['Ivory Raindrop', 'Iron Bloom', 'Canvas Shell', 'Silver Twig', 'Clay Lantern', 'Wool Compass'],
   ['Quartz Acorn', 'Bronze Kite', 'Paper Fossil', 'Glass Thimble', 'Oak Wave', 'Ceramic Star'],
   ['Stone Whistle', 'Copper Petal', 'Velvet Cog', 'Tin Crescent', 'Wooden Flame', 'Marble Loop'],
+  ['Amber Pendulum', 'Slate Bubble', 'Willow Crown', 'Pewter Leaf', 'Cotton Prism', 'Coral Key'],
+  ['Bamboo Bell', 'Granite Moth', 'Silk Anchor', 'Nickel Rose', 'Chalk Orbit', 'Leather Star'],
+  ['Cedar Teardrop', 'Opal Wheel', 'Felt Arrow', 'Steel Blossom', 'Parchment Shell', 'Brass Wave'],
+  ['Cork Ladder', 'Crystal Finch', 'Iron Halo', 'Canvas Pearl', 'Copper Root', 'Clay Sail'],
+  ['Paper Lantern', 'Marble Wren', 'Velvet Pebble', 'Silver Reed', 'Oak Spiral', 'Tin Sun'],
+  ['Quartz Button', 'Wool Kite', 'Bronze Seed', 'Glass Fan', 'Birch Moon', 'Ceramic Thread'],
+  ['Stone Crown', 'Copper Shell', 'Linen Comet', 'Iron Petal', 'Amber Loop', 'Paper Compass'],
+  ['Slate Feather', 'Brass Acorn', 'Silk Crescent', 'Marble Twig', 'Willow Gear', 'Clay Star'],
+  ['Glass Ribbon', 'Oak Raindrop', 'Felt Planet', 'Nickel Bloom', 'Parchment Kite', 'Ceramic Echo'],
+  ['Tin Feather', 'Coral Spiral', 'Cotton Bird', 'Granite Seed', 'Pewter Moon', 'Bamboo Wave'],
+  ['Bronze Thimble', 'Canvas Comet', 'Silver Shell', 'Cork Blossom', 'Quartz Petal', 'Wool Halo'],
+  ['Iron Acorn', 'Paper Gear', 'Amber Wren', 'Slate Orbit', 'Birch Lantern', 'Glass Root'],
+  ['Velvet Arrow', 'Copper Planet', 'Clay Crown', 'Silk Whistle', 'Oak Seed', 'Marble Sail'],
+  ['Ceramic Moth', 'Nickel Ribbon', 'Parchment Bloom', 'Brass Moon', 'Felt Ladder', 'Stone Reed'],
+  ['Willow Thimble', 'Tin Compass', 'Coral Cloud', 'Cotton Fossil', 'Granite Flame', 'Silver Loop'],
 ] as const;
 
 const MARKS = ['○', '△', '⌒', '◇', '≋', '••'] as const;
 const SHAPES: Exhibit['shape'][] = ['round', 'angled', 'arched', 'folded', 'striped', 'dotted'];
-const RULE_LABELS = ['Archive note', 'Balance note', 'Shelf note', 'Curator note', 'Packing note'];
-
 export const CASE_SEEDS = [
   FREE_SEED,
   'case-02-quiet-copper', 'case-03-glass-arc', 'case-04-folded-stone', 'case-05-paper-orbit',
@@ -84,7 +105,8 @@ function shuffled<T>(items: readonly T[], state: { value: number }): T[] {
 
 export function createCase(seed: string): CaseDefinition {
   const seedHash = hashSeed(seed);
-  const collection = COLLECTIONS[seedHash % COLLECTIONS.length];
+  const knownCaseIndex = CASE_SEEDS.indexOf(seed as (typeof CASE_SEEDS)[number]);
+  const collection = COLLECTIONS[knownCaseIndex >= 0 ? knownCaseIndex : seedHash % COLLECTIONS.length];
   const exhibits = collection.map((name, index) => ({
     id: `item-${index}`,
     name,
@@ -97,8 +119,27 @@ export function createCase(seed: string): CaseDefinition {
   if (startingOrder.every((id, index) => id === hiddenOrder[index])) {
     startingOrder = [...startingOrder.slice(1), startingOrder[0]];
   }
-  const knownCaseIndex = CASE_SEEDS.indexOf(seed as (typeof CASE_SEEDS)[number]);
   const number = knownCaseIndex >= 0 ? knownCaseIndex + 1 : (seedHash % 19) + 2;
+  const name = (id: string) => exhibits.find((item) => item.id === id)?.name ?? id;
+  const ruleIndex = (knownCaseIndex >= 0 ? knownCaseIndex : seedHash) % 5;
+  const rule: CaseRule = ruleIndex === 0
+    ? { kind: 'lightest', exhibit: hiddenOrder[0] }
+    : ruleIndex === 1
+      ? { kind: 'heaviest', exhibit: hiddenOrder[5] }
+      : ruleIndex === 2
+        ? { kind: 'adjacent', lighter: hiddenOrder[2], heavier: hiddenOrder[3] }
+        : ruleIndex === 3
+          ? { kind: 'between', lighter: hiddenOrder[1], middle: hiddenOrder[3], heavier: hiddenOrder[5] }
+          : { kind: 'one-between', lighter: hiddenOrder[1], heavier: hiddenOrder[3] };
+  const ruleText = rule.kind === 'lightest'
+    ? `${name(rule.exhibit)} is the lightest exhibit.`
+    : rule.kind === 'heaviest'
+      ? `${name(rule.exhibit)} is the heaviest exhibit.`
+      : rule.kind === 'adjacent'
+        ? `${name(rule.lighter)} sits directly before ${name(rule.heavier)}.`
+        : rule.kind === 'between'
+          ? `${name(rule.middle)} sits between ${name(rule.lighter)} and ${name(rule.heavier)}.`
+          : `Exactly one exhibit sits between ${name(rule.lighter)} and ${name(rule.heavier)}.`;
   return {
     seed,
     number,
@@ -107,7 +148,8 @@ export function createCase(seed: string): CaseDefinition {
     hiddenOrder,
     startingOrder,
     given: { lighter: hiddenOrder[1], heavier: hiddenOrder[4] },
-    ruleLabel: RULE_LABELS[seedHash % RULE_LABELS.length],
+    rule,
+    ruleText,
   };
 }
 
@@ -124,25 +166,37 @@ export function newGame(seed = FREE_SEED): GameState {
   };
 }
 
+function permutations<T>(items: readonly T[]): T[][] {
+  if (items.length <= 1) return [[...items]];
+  return items.flatMap((item, index) => permutations([...items.slice(0, index), ...items.slice(index + 1)])
+    .map((rest) => [item, ...rest]));
+}
+
+export function orderMatchesRule(order: readonly string[], rule: CaseRule): boolean {
+  const position = (id: string) => order.indexOf(id);
+  switch (rule.kind) {
+    case 'lightest': return position(rule.exhibit) === 0;
+    case 'heaviest': return position(rule.exhibit) === order.length - 1;
+    case 'adjacent': return position(rule.heavier) - position(rule.lighter) === 1;
+    case 'between': return position(rule.lighter) < position(rule.middle) && position(rule.middle) < position(rule.heavier);
+    case 'one-between': return position(rule.heavier) - position(rule.lighter) === 2;
+  }
+}
+
+export function possibleOrders(gameCase: CaseDefinition, comparisons: Comparison[]): string[][] {
+  const ids = gameCase.exhibits.map((item) => item.id);
+  const facts = [gameCase.given, ...comparisons];
+  return permutations(ids).filter((order) => orderMatchesRule(order, gameCase.rule) && facts.every(({ lighter, heavier }) =>
+    order.indexOf(lighter) < order.indexOf(heavier)));
+}
+
 export function allRelations(gameCase: CaseDefinition, comparisons: Comparison[]): Comparison[] {
   const ids = gameCase.exhibits.map((item) => item.id);
-  const reachable = new Map(ids.map((id) => [id, new Set<string>()]));
-  [gameCase.given, ...comparisons].forEach(({ lighter, heavier }) => reachable.get(lighter)?.add(heavier));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    ids.forEach((from) => {
-      [...(reachable.get(from) ?? [])].forEach((through) => {
-        (reachable.get(through) ?? []).forEach((to) => {
-          if (!reachable.get(from)?.has(to)) {
-            reachable.get(from)?.add(to);
-            changed = true;
-          }
-        });
-      });
-    });
-  }
-  return ids.flatMap((lighter) => [...(reachable.get(lighter) ?? [])].map((heavier) => ({ lighter, heavier })));
+  const candidates = possibleOrders(gameCase, comparisons);
+  if (candidates.length === 0) return [];
+  return ids.flatMap((lighter) => ids
+    .filter((heavier) => lighter !== heavier && candidates.every((order) => order.indexOf(lighter) < order.indexOf(heavier)))
+    .map((heavier) => ({ lighter, heavier })));
 }
 
 export function selectForComparison(state: GameState, id: string): GameState {

@@ -9,6 +9,7 @@ import {
   isSavedGame,
   moveProposal,
   newGame,
+  possibleOrders,
   selectForComparison,
   submitOrder,
   type GameState,
@@ -224,6 +225,7 @@ function renderGame(state: GameState, preview: boolean): string {
   const gameCase = createCase(state.seed);
   const exhibitMap = new Map(gameCase.exhibits.map((item) => [item.id, item]));
   const relations = allRelations(gameCase, state.comparisons);
+  const remainingOrders = possibleOrders(gameCase, state.comparisons).length;
   const comparisonCount = COMPARISON_BUDGET - state.tokensLeft;
   const disabled = preview || state.status !== 'active';
   const exhibits = state.proposal.map((id, index) => {
@@ -267,12 +269,14 @@ function renderGame(state: GameState, preview: boolean): string {
     <div class="clue-panel">
       <div>
         <h3>Free clue</h3>
-        <p class="given-clue"><strong>${gameCase.ruleLabel}:</strong> ${itemName(gameCase, gameCase.given.lighter)} is lighter than ${itemName(gameCase, gameCase.given.heavier)}.</p>
+        <p class="given-clue">${itemName(gameCase, gameCase.given.lighter)} is lighter than ${itemName(gameCase, gameCase.given.heavier)}.</p>
+        <h3 class="rule-heading">Case rule</h3>
+        <p class="case-rule" data-rule-kind="${gameCase.rule.kind}">${escapeHtml(gameCase.ruleText)}</p>
       </div>
       <div>
         <h3>Known order</h3>
-        <p class="clue-summary">${relations.length} relation${relations.length === 1 ? '' : 's'}, including deductions.</p>
-        <ul class="clue-list">${clueItems}</ul>
+        <p class="clue-summary">${relations.length} relation${relations.length === 1 ? '' : 's'} known. ${remainingOrders} possible order${remainingOrders === 1 ? '' : 's'} remain.</p>
+        <ul class="clue-list" tabindex="0" aria-label="Known order deductions">${clueItems}</ul>
       </div>
     </div>
     ${roomSession ? renderRoomPanel() : ''}
@@ -344,7 +348,7 @@ function rulesDialog(): string {
       <li>Use the arrow buttons to move each exhibit toward lightest or heaviest.</li>
       <li>Submit the row once. A wrong order ends the case.</li>
     </ol>
-    <p>The free clue and every comparison can imply more known relations.</p>
+    <p>The case rule, free clue, and every comparison can imply more known relations.</p>
     <button type="button" data-close-dialog="rules-dialog">Return to the case</button>
   </dialog>`;
 }
@@ -372,7 +376,7 @@ function landingSections(): string {
     <h2 id="how-heading">Find the order in three steps</h2>
     <ol class="steps">
       <li><h3>Compare two exhibits</h3><p>Each new comparison tells you which exhibit is lighter and spends one token.</p></li>
-      <li><h3>Use the deductions</h3><p>The known-order list adds facts implied by earlier comparisons.</p></li>
+      <li><h3>Use the case rule</h3><p>Each case adds one placement rule. The known-order list combines it with your comparisons.</p></li>
       <li><h3>Submit one order</h3><p>Move all six labels from lightest to heaviest, then submit the row.</p></li>
     </ol>
   </section>
@@ -392,7 +396,7 @@ function landingSections(): string {
       <p class="price">$6 USD<span>One-time purchase. No subscription.</span></p>
     </div>
     <div>
-      <p>The free case stays playable. The purchase adds 19 curated cases with new exhibits, hidden orders, and starting clues.</p>
+      <p>The free case stays playable. The purchase adds 19 curated cases with new exhibits, hidden orders, clues, and placement rules.</p>
       <div class="paid-actions">
         <button type="button" disabled>Checkout registration pending</button>
         <a href="/license" data-route>Restore a license</a>

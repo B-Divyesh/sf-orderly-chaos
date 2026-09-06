@@ -539,6 +539,18 @@ button.button-quiet {
   border-left: 3px solid var(--brass);
 }
 
+.rule-heading {
+  margin-top: 18px;
+}
+
+.case-rule {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--brass);
+  background: #f1e4cd;
+  font-weight: 700;
+}
+
 .clue-summary {
   margin: 0 0 8px;
   color: var(--ink-muted);

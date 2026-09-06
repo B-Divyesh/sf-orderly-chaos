@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { COMPARISON_BUDGET, createCase, DEMO_SEED } from '../src/game';
+import { allRelations, COMPARISON_BUDGET, createCase, DEMO_SEED, FREE_SEED } from '../src/game';
 
 async function orderLikeSolution(page: Page, seed = DEMO_SEED): Promise<void> {
   const gameCase = createCase(seed);
@@ -22,6 +22,19 @@ async function revealAdjacentFacts(page: Page, seed = DEMO_SEED): Promise<void> 
   }
 }
 
+function firstUnknownPair(seed = DEMO_SEED): [string, string] {
+  const gameCase = createCase(seed);
+  const known = new Set(allRelations(gameCase, []).map(({ lighter, heavier }) => `${lighter}:${heavier}`));
+  for (let left = 0; left < gameCase.hiddenOrder.length; left += 1) {
+    for (let right = left + 1; right < gameCase.hiddenOrder.length; right += 1) {
+      const a = gameCase.hiddenOrder[left];
+      const b = gameCase.hiddenOrder[right];
+      if (!known.has(`${a}:${b}`) && !known.has(`${b}:${a}`)) return [a, b];
+    }
+  }
+  throw new Error('Case has no unknown comparison');
+}
+
 async function solveCase(page: Page, seed = DEMO_SEED): Promise<void> {
   await revealAdjacentFacts(page, seed);
   await orderLikeSolution(page, seed);
@@ -34,11 +47,29 @@ test('@claim:complete-run a deterministic case reaches a real win screen', async
   await expect(page.locator('[data-compare]')).toHaveCount(6);
   await solveCase(page);
   await expect(page.getByRole('heading', { name: 'Case solved' })).toBeVisible();
-  await expect(page.locator('.end-screen')).toContainText('5 comparisons');
+  await expect(page.locator('.end-screen')).toContainText(/\d+ comparisons/);
   await expect(page.getByRole('button', { name: 'Play this case again' })).toBeVisible();
   if (process.env.EVIDENCE_DIR) {
     await page.screenshot({ path: `${process.env.EVIDENCE_DIR}/live-win-screen.png`, fullPage: true });
   }
+});
+
+test('@claim:five-minute-run a deterministic complete round takes less than five minutes', async ({ page }) => {
+  const startedAt = Date.now();
+  await page.goto('/demo');
+  await solveCase(page);
+  await expect(page.getByRole('heading', { name: 'Case solved' })).toBeVisible();
+  expect(Date.now() - startedAt).toBeLessThan(300_000);
+});
+
+test('@claim:free-case-loop the permanent free case reaches win and loss endings', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#start-solo').click();
+  await solveCase(page, FREE_SEED);
+  await expect(page.getByRole('heading', { name: 'Case solved' })).toBeVisible();
+  await page.getByRole('button', { name: 'Play this case again' }).click();
+  await page.getByRole('button', { name: 'Submit this order' }).click();
+  await expect(page.getByRole('heading', { name: 'Case lost' })).toBeVisible();
 });
 
 test('an incorrect submitted order reaches the loss screen', async ({ page }) => {
@@ -50,7 +81,7 @@ test('an incorrect submitted order reaches the loss screen', async ({ page }) =>
 
 test('@claim:restart-reset restart restores the full case state', async ({ page }) => {
   await page.goto('/demo');
-  const [first, second] = createCase(DEMO_SEED).hiddenOrder;
+  const [first, second] = firstUnknownPair();
   await page.locator(`[data-compare="${first}"]`).click();
   await page.locator(`[data-compare="${second}"]`).click();
   await expect(page.locator('#comparison-count')).toHaveText(`1/${COMPARISON_BUDGET}`);
@@ -58,12 +89,12 @@ test('@claim:restart-reset restart restores the full case state', async ({ page 
   await page.getByRole('button', { name: 'Restart case' }).click();
   await expect(page.locator('#comparison-count')).toHaveText(`0/${COMPARISON_BUDGET}`);
   await expect(page.locator('#game-board')).toHaveAttribute('data-game-status', 'active');
-  await expect(page.locator('.clue-list li')).toHaveCount(1);
+  await expect(page.locator('.clue-list li')).toHaveCount(allRelations(createCase(DEMO_SEED), []).length);
 });
 
 test('@claim:progress-persistence solo progress survives a reload', async ({ page }) => {
   await page.goto('/demo');
-  const [first, second] = createCase(DEMO_SEED).hiddenOrder;
+  const [first, second] = firstUnknownPair();
   await page.locator(`[data-compare="${first}"]`).click();
   await page.locator(`[data-compare="${second}"]`).click();
   await page.reload();
@@ -76,13 +107,27 @@ test('@claim:demo-isolation demo reset never changes saved solo data', async ({ 
   await page.evaluate(() => localStorage.setItem('orderly-chaos:game', JSON.stringify({ sentinel: 'real-progress' })));
   await page.goto('/demo');
   await expect(page.getByLabel('Demo status').getByText('Demo', { exact: true })).toBeVisible();
-  const [first, second] = createCase(DEMO_SEED).hiddenOrder;
+  const [first, second] = firstUnknownPair();
   await page.locator(`[data-compare="${first}"]`).click();
   await page.locator(`[data-compare="${second}"]`).click();
   await page.getByRole('button', { name: 'Reset demo' }).click();
   const realValue = await page.evaluate(() => localStorage.getItem('orderly-chaos:game'));
   expect(realValue).toContain('real-progress');
   await expect(page.locator('#comparison-count')).toHaveText(`0/${COMPARISON_BUDGET}`);
+});
+
+test('@claim:start-real-cleanup starting for real removes all demo progress', async ({ page }) => {
+  await page.goto('/demo');
+  const [first, second] = firstUnknownPair();
+  await page.locator(`[data-compare="${first}"]`).click();
+  await page.locator(`[data-compare="${second}"]`).click();
+  await expect(page.locator('#comparison-count')).toHaveText(`1/${COMPARISON_BUDGET}`);
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL('/');
+  await expect(page.getByLabel('Demo status')).toHaveCount(0);
+  await expect(page.locator('.case-kicker')).toContainText(FREE_SEED);
+  await expect(page.locator('#comparison-count')).toHaveText(`0/${COMPARISON_BUDGET}`);
+  expect(await page.evaluate(() => localStorage.getItem('demo:orderly-chaos:game'))).toBeNull();
 });
 
 test('@claim:settings-persist sound and motion choices survive reload', async ({ page }) => {
@@ -102,11 +147,35 @@ test('@claim:solo-local-privacy solo demo sends no cross-origin requests', async
   const origins = new Set<string>();
   page.on('request', (request) => origins.add(new URL(request.url()).origin));
   await page.goto('/demo');
-  const [first, second] = createCase(DEMO_SEED).hiddenOrder;
+  const [first, second] = firstUnknownPair();
   await page.locator(`[data-compare="${first}"]`).click();
   await page.locator(`[data-compare="${second}"]`).click();
   expect([...origins]).toEqual([new URL(page.url()).origin]);
   await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
+});
+
+test('@claim:control-inputs mouse, keyboard, and touch all change a case', async ({ browser, page }) => {
+  await page.goto('/demo');
+  const pair = firstUnknownPair();
+  await page.locator(`[data-compare="${pair[0]}"]`).click();
+  await page.locator(`[data-compare="${pair[1]}"]`).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#comparison-count')).toHaveText(`1/${COMPARISON_BUDGET}`);
+  const moveId = (await page.locator('[data-compare]').nth(2).getAttribute('data-compare'))!;
+  await page.locator(`[data-compare="${moveId}"]`).focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('[data-compare]').nth(1)).toHaveAttribute('data-compare', moveId);
+
+  const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const touchPage = await touchContext.newPage();
+  try {
+    await touchPage.goto('/demo');
+    await touchPage.locator(`[data-compare="${pair[0]}"]`).tap();
+    await touchPage.locator(`[data-compare="${pair[1]}"]`).tap();
+    await expect(touchPage.locator('#comparison-count')).toHaveText(`1/${COMPARISON_BUDGET}`);
+  } finally {
+    await touchContext.close();
+  }
 });
 
 test('@claim:two-player-shared two independent browsers share authoritative room results', async ({ browser }) => {
@@ -165,6 +234,25 @@ test('@claim:room-expiry server rooms expire in 24 hours', async ({ request }) =
   expect(room.expiresAt).toBeLessThanOrEqual(before + 86_405);
 });
 
+test('@claim:two-player-limit a third browser cannot join a full room', async ({ playwright }) => {
+  const creator = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL as string });
+  const second = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL as string });
+  const third = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL as string });
+  try {
+    const created = await creator.post('/api/rooms', { data: { seed: 'two-player-boundary' }, headers: { 'x-forwarded-for': '203.0.113.41' } });
+    expect(created.status()).toBe(200);
+    const { code } = await created.json() as { code: string };
+    expect((await second.post(`/api/rooms/${code}/join`, { headers: { 'x-forwarded-for': '203.0.113.42' } })).status()).toBe(200);
+    const rejected = await third.post(`/api/rooms/${code}/join`, { headers: { 'x-forwarded-for': '203.0.113.43' } });
+    expect(rejected.status()).toBe(409);
+    await expect(rejected.json()).resolves.toMatchObject({ error: 'That room already has two players.' });
+  } finally {
+    await creator.dispose();
+    await second.dispose();
+    await third.dispose();
+  }
+});
+
 test('@release:server-routing delivers the room API, health JSON, and a real 404', async ({ request }) => {
   const health = await request.get('/health');
   expect(health.status()).toBe(200);
@@ -207,6 +295,25 @@ test('@claim:case-pack the one-time license unlocks all 20 cases', async ({ page
   await expect(page.locator('[data-case-seed]')).toHaveCount(19);
   await expect(page.getByText('$6 USD')).toBeVisible();
   await expect(page.getByText('One-time purchase. No subscription.')).toBeVisible();
+});
+
+test('@claim:license-revocation a revoked license removes paid case access', async ({ page }) => {
+  let licenseActive = true;
+  await page.route(`${VERIFY_URL_PATTERN()}**`, async (route) => {
+    await route.fulfill({
+      status: licenseActive ? 200 : 403,
+      contentType: 'application/json',
+      body: JSON.stringify({ valid: licenseActive, reason: licenseActive ? 'ok' : 'revoked', expires_at: null }),
+    });
+  });
+  await page.goto('/license?license=recorded-fixture-token');
+  await expect(page.locator('#license-status')).toContainText('All 20 cases');
+  licenseActive = false;
+  await page.getByLabel('License token').fill('recorded-fixture-token');
+  await page.getByRole('button', { name: 'Verify and restore cases' }).click();
+  await expect(page.locator('#license-status')).toContainText('not active');
+  await page.getByRole('link', { name: 'Orderly Chaos' }).click();
+  await expect(page.locator('[data-case-seed]')).toHaveCount(0);
 });
 
 function VERIFY_URL_PATTERN(): string {
