@@ -183,6 +183,19 @@ test('@release:server-routing delivers the room API, health JSON, and a real 404
   expect(missing.headers()['content-type']).toContain('text/html');
 });
 
+test('room state is unavailable without that browser’s room access', async ({ page, request }) => {
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Create two-player room' }).click();
+  const code = (await page.locator('.room-code').textContent())?.trim();
+  expect(code).toMatch(/^[A-Z2-9]{5}$/);
+
+  const response = await request.get(`/api/rooms/${code}`);
+  expect(response.status()).toBe(401);
+  await expect(response.json()).resolves.toMatchObject({
+    error: 'Open this room from the browser that created or joined it.',
+  });
+});
+
 test('@claim:case-pack the one-time license unlocks all 20 cases', async ({ page }) => {
   await page.route(`${VERIFY_URL_PATTERN()}**`, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ valid: true, reason: 'ok', expires_at: null }) });
