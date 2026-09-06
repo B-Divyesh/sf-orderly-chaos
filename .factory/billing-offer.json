@@ -1,0 +1,14 @@
+{
+  "slug": "orderly-chaos",
+  "name": "Orderly Chaos complete case pack",
+  "price_minor": 600,
+  "currency": "USD",
+  "price_type": "one_time_price",
+  "return_url": "https://orderly-chaos.sociobot.in/license",
+  "price_evidence": "The researched brief requires a one-time curated case pack; the public product page and terms establish the complete pack at $6 USD once.",
+  "paid_features": [
+    "19 additional curated six-object cases",
+    "20 total playable cases including the permanent free case"
+  ],
+  "license_validation_path": "/api/v1/products/orderly-chaos/verify"
+}

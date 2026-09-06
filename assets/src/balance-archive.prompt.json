@@ -1,0 +1,7 @@
+{
+  "model": "factory-image",
+  "generated_on": "2026-09-06",
+  "use_case": "stylized-concept",
+  "source": ".factory/design.md#generated-scene-prompt",
+  "review": "Accepted: six intended fictional objects, no text, people, brand marks, seams, or visible artifacts."
+}

@@ -1,0 +1,24 @@
+{
+  "name": "orderly-chaos",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "npm run test:unit && npm run build && npm run test:server && npm run test:e2e",
+    "test:unit": "vitest run src",
+    "test:server": "cargo test --locked",
+    "test:e2e": "playwright test",
+    "serve:test": "ORDERLY_DB_PATH=:memory: PORT=4173 cargo run --quiet --locked"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.58.2",
+    "@types/node": "24.3.0",
+    "typescript": "5.9.2",
+    "vite": "7.3.6",
+    "vitest": "3.2.7"
+  }
+}

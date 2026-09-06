@@ -1,0 +1,1 @@
+Solve six-object ordering puzzles solo or with a friend using limited comparisons.

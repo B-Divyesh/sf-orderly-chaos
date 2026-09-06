@@ -1,0 +1,72 @@
+[
+  {
+    "id": "complete-run",
+    "claim": "A deterministic six-object case reaches a real win screen.",
+    "where": "game board and README",
+    "test": "npm run test:e2e -- --grep @claim:complete-run",
+    "sandbox": "fresh browser context at /demo; reveal adjacent facts, arrange the actual seeded order, submit, and assert the scored win screen"
+  },
+  {
+    "id": "restart-reset",
+    "claim": "Restart restores the active case and all nine comparison tokens.",
+    "where": "game controls",
+    "test": "npm run test:e2e -- --grep @claim:restart-reset",
+    "sandbox": "fresh /demo case; spend a comparison, confirm restart, then assert active state, 0/9 comparisons, and only the free clue"
+  },
+  {
+    "id": "progress-persistence",
+    "claim": "Solo progress stays in this browser and survives reload.",
+    "where": "first-screen facts, privacy page, and README",
+    "test": "npm run test:e2e -- --grep @claim:progress-persistence",
+    "sandbox": "fresh /demo context; spend a comparison, reload, and assert the same active case and comparison count"
+  },
+  {
+    "id": "demo-isolation",
+    "claim": "Demo changes do not change saved solo data.",
+    "where": "first screen, demo banner, and demo documentation",
+    "test": "npm run test:e2e -- --grep @claim:demo-isolation",
+    "sandbox": "seed the real storage key, change and reset /demo, then assert the real value is untouched"
+  },
+  {
+    "id": "settings-persist",
+    "claim": "Sound and reduced-motion settings persist in this browser.",
+    "where": "game settings and README",
+    "test": "npm run test:e2e -- --grep @claim:settings-persist",
+    "sandbox": "fresh /demo context; enable both settings, reload, and assert controls and motion mode remain enabled"
+  },
+  {
+    "id": "solo-local-privacy",
+    "claim": "Solo play needs no account and makes no cross-origin requests.",
+    "where": "first-screen facts and privacy section",
+    "test": "npm run test:e2e -- --grep @claim:solo-local-privacy",
+    "sandbox": "record every request during a demo comparison and assert the product origin is the only origin and no credential fields exist"
+  },
+  {
+    "id": "two-player-shared",
+    "claim": "Two independent browsers can solve one shared room case asynchronously.",
+    "where": "first screen, room panel, and README",
+    "test": "npm run test:e2e -- --grep @claim:two-player-shared",
+    "sandbox": "two isolated browser contexts create and join one room; player one solves; player two reads the server-validated result"
+  },
+  {
+    "id": "room-expiry",
+    "claim": "Room codes expire after 24 hours.",
+    "where": "first-screen facts, privacy page, terms, and room panel",
+    "test": "npm run test:e2e -- --grep @claim:room-expiry",
+    "sandbox": "create a room through the live local API and assert its server expiry is 24 hours from creation"
+  },
+  {
+    "id": "case-pack",
+    "claim": "A $6 one-time license unlocks 19 paid cases, for 20 total.",
+    "where": "paid section, license page, terms, and README",
+    "test": "npm run test:e2e -- --grep @claim:case-pack",
+    "sandbox": "recorded valid Sociobot verification fixture; assert the token leaves the URL and all 19 paid case choices appear beside the exact price"
+  },
+  {
+    "id": "steady-render",
+    "claim": "Active play renders at 50 frames per second or better in the test phone-class browser profile.",
+    "where": "verification handoff",
+    "test": "npm run test:e2e -- --grep @claim:steady-render",
+    "sandbox": "fresh active demo; measure requestAnimationFrame callbacks and fixed-step updates for more than two seconds"
+  }
+]

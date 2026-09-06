@@ -1,0 +1,79 @@
+body {
+  margin: 0;
+  background: #f4eddf;
+  color: #172b3a;
+  font: 18px/1.55 system-ui, sans-serif;
+}
+
+main {
+  display: grid;
+  min-height: 75vh;
+  padding: 32px;
+  place-content: center;
+}
+
+header,
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px max(24px, calc((100vw - 1120px) / 2));
+}
+
+header nav,
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.wordmark {
+  color: #172b3a;
+  font: 700 20px Georgia, serif;
+  text-decoration: none;
+}
+
+footer {
+  align-items: flex-start;
+  background: #0d202c;
+  color: #fffaf0;
+}
+
+footer a {
+  color: #fffaf0;
+}
+
+footer p {
+  margin: 0;
+}
+
+a {
+  color: #8f2f24;
+  font-weight: 700;
+}
+
+h1 {
+  max-width: 10ch;
+  margin: .25em 0;
+  font: 700 clamp(2.2rem, 8vw, 5rem)/1 Georgia, serif;
+}
+
+.mark {
+  color: #8a5b12;
+  font-size: 4rem;
+}
+
+.skip {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+@media (max-width: 640px) {
+  header,
+  footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

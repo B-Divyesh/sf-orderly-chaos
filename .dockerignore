@@ -1,0 +1,9 @@
+.git
+.factory
+assets/src
+node_modules
+dist
+target
+test-results
+playwright-report
+*.log

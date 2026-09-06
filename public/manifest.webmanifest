@@ -1,0 +1,12 @@
+{
+  "name": "Orderly Chaos",
+  "short_name": "Orderly Chaos",
+  "description": "Order six exhibits with a limited number of comparisons.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4eddf",
+  "theme_color": "#f4eddf",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
