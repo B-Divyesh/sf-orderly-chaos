@@ -2,57 +2,91 @@
 
 ## Outcome
 
-**FAIL — the live shared-room backend is not deployed at the public product
-host.** This independent verification made no product-code changes.
+**PASS — the live shared-room service is available at the product origin.**
 
-- Reviewed implementation: `906bfe2bebd6049ce75819fa58197b7ebc6df605`
-- Documentation revision: `cdcaea200273a99f70d9fb6a3a6f4c91d7064b34`
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Report: `.factory/verification-3.md`
+- Product implementation: `906bfe2bebd6049ce75819fa58197b7ebc6df605`
+- Deployed source revision: `0ed5e8234e61012dfcec92d5104317fe5c4b5c8c`
+- Deployed container revision: `sf-orderly-chaos--0000007`
+- Repair report: `.factory/verification-4.md`
 
-The live frontend asset exactly matches the built reviewed implementation. The
-backend routes do not: `/health` returns the designed HTML 404 and
-`POST /api/rooms` returns 405. As a result the advertised asynchronous
-two-player mode cannot create a room, and public restart persistence, room
-access isolation, expiry, and 429/`Retry-After` recovery cannot be accepted.
+The implementation already contained the tested Rust/SQLite room service. The
+failure was at the deployment layer: the public hostname served a static
+fallback for backend routes. Repair 4 deployed the repository's `Dockerfile`
+to the owned `sf-orderly-chaos` container app and bound the product hostname to
+that service.
 
-## What passed
+The deployed app keeps one running replica, one maximum replica, and the
+existing `sf-orderly-chaos-data` volume mounted at `/data`. SQLite state stays
+at `/data/orderly-chaos.sqlite3`. No shared database is used.
 
-- `npm ci`, final `npm test` (32 tests), and `npm run build` passed locally.
-- All 17 registered claim commands passed locally from the documented setup.
-  The shared-room command was rerun alone after a transient Playwright
-  artifact-directory race and passed.
-- The live solo game works: desktop and phone first screens are clear, the
-  sample is populated and labelled, demo isolation/reset passed, and a
-  deterministic run reached its real win screen.
-- Live accessibility, route, keyboard, reduced-motion, privacy, legal-page,
-  link, and designed-404 checks passed. `verify-url.sh` found no load console
-  errors. Axe found no serious or critical issues.
-- Live mobile Lighthouse measured 97 performance, 100 accessibility, 100 best
-  practices, and 100 SEO (LCP 2.0 s, CLS 0, TBT 0 ms).
-- The inference-rule and 20 distinct exhibit-set assertions passed.
+## Verified
 
-## Required next step
+- `npm ci`: pass with no audit vulnerabilities.
+- `npm test`: pass — 6 Vitest, 3 Rust/SQLite, and 23 Playwright tests.
+- `npm run build`: pass; `dist/` produced.
+- Every command in `.factory/claims.json`: pass when run separately.
+- `npm run verify:live`: pass against the HTTPS origin.
+- Full live Playwright suite with `LIVE_RESTART=1`: 23/23 pass.
+- Two independent browser clients created and joined one room. One client
+  solved the case and the second read the authoritative result.
+- The same room remained available after restarting the owned container
+  revision, proving SQLite persistence on the durable mount.
+- A client without room access received 401. A third player received 409.
+- Room expiry was 24 hours. Burst requests received 429 and `Retry-After: 1`,
+  and health remained available.
+- `/health` returned JSON with status `ok`; unknown routes returned the
+  designed page with HTTP 404.
+- Fresh desktop and 390 x 844 phone browsers showed the play task, audience,
+  sample action, three facts, and game board without console errors or page
+  overflow.
+- The one-click demo loaded six exhibits, kept its sample-data label, reset
+  cleanly, and did not change normal saved play.
+- A deterministic live run reached the `Case solved` end screen with four
+  comparisons and offered replay. The loss and restart paths also passed.
+- Keyboard, mouse, touch, focus, reduced motion, route titles, legal pages,
+  links, local data clearing, and Playwright Axe checks passed. Axe found no
+  serious or critical violations on any public route or the controls dialog.
+- `/opt/fleet/lib/verify-url.sh` passed: one `h1`, `lang=en`, a `main`
+  landmark, alt text, labelled controls, and no console errors.
+- Live Lighthouse: performance 100, accessibility 100, best practices 100,
+  SEO 100; LCP 1.43 seconds, CLS 0, and total blocking time 48 ms.
+- The active-play browser profile met the registered 50 fps minimum.
+- Initial assets remain within budget: JavaScript 33.96 KB and CSS 13.76 KB
+  uncompressed; the 720 px scene is 42.08 KB.
 
-Deploy or route the owned `sf-orderly-chaos` Rust/SQLite container to
-`orderly-chaos.sociobot.in` for `/health` and `/api/*`, retaining its `/data`
-SQLite mount. Then rerun the public full Playwright suite, including two
-independent browsers, room expiry/third-client boundary, restart persistence,
-access isolation, and 429 with `Retry-After`.
+Status-only evidence is in `/work/.evidence/orderly-chaos-repair-4/`. It
+contains fresh desktop, phone, demo, and win-screen captures, URL-verifier
+output, and Lighthouse JSON. It contains no room access values, credentials,
+cookies, or tokens.
 
-The separate billing operator still needs to register the researched $6 USD
-one-time offer for 19 additional cases. The product must continue to state
-that registration is pending; no subscription, checkout success, or paid
-activation has been verified.
+## Offer and remaining dependency
 
-## Run and verify
+The researched offer is unchanged: $6 USD once for 19 additional curated
+cases, making 20 total. It is not a subscription. Public offer metadata is in
+`.factory/billing-offer.json` and copied to
+`/work/.evidence/billing-offer.json` for the isolated billing operator.
+
+Checkout registration remains an external dependency. The interface still
+states that registration is pending. Recorded fixtures verify license grant
+and revocation behavior, but no checkout or paid activation is claimed as
+live-tested.
+
+## Run and deploy
 
 ```sh
 npm ci
 npm test
 npm run build
-BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e
+LIVE_RESTART=1 BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e
 ```
 
-The full live suite currently fails six backend-dependent scenarios, as
-documented in `.factory/verification-3.md`.
+Deploy only as the product container so `/health` and `/api/*` stay on the
+same origin as the game:
+
+```sh
+WO_DATA_DIR=/data /opt/fleet/lib/deploy-container.sh orderly-chaos /work/repo Dockerfile 8080
+```
+
+Do not replace this deployment with a static-only host. Preserve the `/data`
+volume and the one-replica minimum and maximum.
