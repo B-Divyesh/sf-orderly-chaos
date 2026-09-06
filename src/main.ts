@@ -462,7 +462,7 @@ function licensePage(): string {
 function notFoundPage(): string {
   return `<main id="main" class="not-found-page">
     <p class="eyebrow">404</p>
-    <h1 id="page-title" tabindex="-1">This page is not in the archive</h1>
+    <h1 id="page-title" tabindex="-1">This page was not found</h1>
     <p>The address may be old or mistyped.</p>
     <p><a class="button" href="/" data-route>Return to the ordering puzzle</a></p>
   </main>`;

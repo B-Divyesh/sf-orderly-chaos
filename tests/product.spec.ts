@@ -369,7 +369,7 @@ test('route titles, legal pages, and the designed 404 work', async ({ page, requ
   const missing = await request.get('/does-not-exist');
   expect(missing.status()).toBe(404);
   await page.goto('/does-not-exist');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page is not in the archive');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page was not found');
   await expect(page.getByRole('link', { name: /Return to the ordering puzzle/ })).toBeVisible();
 });
 
