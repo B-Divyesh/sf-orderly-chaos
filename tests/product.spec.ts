@@ -178,7 +178,7 @@ test('@claim:control-inputs mouse, keyboard, and touch all change a case', async
   }
 });
 
-test('@claim:two-player-shared two independent browsers share authoritative room results', async ({ browser }) => {
+test('@claim:two-player-shared @release:restart-routing two independent browsers share authoritative room results', async ({ browser }) => {
   if (process.env.LIVE_RESTART === '1') test.setTimeout(180_000);
   const firstContext = await browser.newContext();
   const secondContext = await browser.newContext();
@@ -211,13 +211,21 @@ test('@claim:two-player-shared two independent browsers share authoritative room
       ]);
       await expect.poll(async () => {
         try {
-          return (await second.request.get('/health')).status();
+          const health = await second.request.get('/health');
+          if (health.status() !== 200) return 0;
+          return (await health.json() as { status?: string }).status === 'ok' ? 200 : 0;
         } catch {
           return 0;
         }
       }, { timeout: 120_000, intervals: [1000, 2000, 3000] }).toBe(200);
       await second.getByRole('button', { name: 'Refresh room results' }).click();
       await expect(second.locator('.room-players li').first()).toContainText('Solved');
+      const freshRoom = await second.request.post('/api/rooms', {
+        data: { seed: 'restart-recovery-case' },
+        headers: { 'x-forwarded-for': '198.51.100.89' },
+      });
+      expect(freshRoom.status()).toBe(200);
+      expect(freshRoom.headers()['content-type']).toContain('application/json');
     }
   } finally {
     await firstContext.close();

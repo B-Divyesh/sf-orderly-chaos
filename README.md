@@ -58,7 +58,8 @@ Do not deploy the frontend without this service; that would make advertised
 two-player rooms unavailable.
 
 After deployment, verify that the public hostname reaches the service rather
-than a static fallback:
+than a static fallback. This checks health JSON, room creation, a deliberate
+404, and persisted room results after one owned revision restart:
 
 ```sh
 npm run verify:live
