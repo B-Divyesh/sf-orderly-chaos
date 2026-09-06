@@ -2,85 +2,35 @@
 
 ## Outcome
 
-**PASS in repair verification — all three verification-6 findings are fixed.**
+**FAIL in independent verification 7 — one incomplete claims-contract item remains.**
 
 - Live URL: <https://orderly-chaos.sociobot.in>
-- Implementation SHA: `7883cfb`
-- Documentation report SHA: `7104da9`
-- Evidence: `/work/.evidence/orderly-chaos-repair-7/`
-- Assigned report: `.factory/verification-6.md`
+- Implementation reviewed: `7883cfb0a065fc6523bc93ce54c4f404871e0cf7`
+- Documentation revision: `8b798354ca5f7e6f16901ce120dbcb0c9e359f1a`
+- Report: `.factory/verification-7.md`
+- Evidence: `/work/.evidence/orderly-chaos-verify-7/`
 
-The final live footer reports build `7883cfb`. The static deployment preserved
-the existing linked product-owned Rust/SQLite backend and its durable `/data`
-configuration.
+The live static assets match a clean production build at the documentation revision; changes after the implementation candidate are documentation only.
 
-## Findings repaired
+## Remaining finding
 
-1. Every visible link, button, and input now measures at least 44 × 44 CSS px
-   in a fresh 390 × 844 touch browser on `/`, `/demo`, `/privacy`, `/terms`,
-   `/license`, and the real HTTP 404 page.
-2. The 404 skip link is visually hidden until keyboard focus. When focused it
-   enters normal layout, does not overlap the wordmark at phone or desktop
-   widths, and uses the product's 3 px solid focus treatment. Every 404 link
-   uses the same focus treatment.
-3. `.factory/claims.json` now registers exact tests for no tracking or
-   advertising cookies, complete browser-data removal, and hashed room-token
-   storage. The browser-data test creates each stated category through the UI.
-   The SQLite test creates a room through the production handler and compares
-   the stored value with the returned access value without logging either.
+The public privacy claim that room access tokens are stored as hashes has a passing exact Rust/SQLite test, but the test does not carry the required `@claim:room-token-hash` tag. The claims contract requires exactly one such tag per declared public claim. Add a runner-recognized tag to that exact test, keep the declared command, and rerun the separate claim audit. This is the only verification-7 finding; do not mark the product PASS until it is closed.
 
-## Verification completed
+## What passed
 
-- Clean `npm ci`: pass; 0 reported vulnerabilities.
-- `npm test`: pass — 6 Vitest, 4 Rust/SQLite, and 27 Playwright tests.
-- `npm run build`: pass; `dist/` produced.
-- Initial JavaScript: 11.72 KB gzip. CSS: 4.19 KB gzip.
-- Every one of the 20 exact claim commands: pass when run separately.
-- `npm run verify:live`: 2/2 pass. Two isolated clients shared an
-  authoritative result, the owned backend revision restarted, the result
-  persisted, and a fresh room could be created after recovery.
-- Final full live suite: 27/27 pass after the clean-SHA deployment.
-- URL verifier: HTTPS 200, correct title and language, one h1, main landmark,
-  alt text present, controls labelled, and no console errors.
-- Playwright Axe: no serious or critical violations on every public route or
-  the controls dialog.
-- Fresh desktop and phone browsers show the ordering job, audience, first
-  action, board, and an exhibit before scrolling, without horizontal overflow.
-- The one-click sample shows six named exhibits at 0/9, keeps its demo label,
-  resets independently, and leaves seeded normal progress unchanged.
-- Deterministic live play reaches the real win and loss screens. Replay and
-  restart reset the case.
-- Phone-class active play measured 60 fps.
-- Mobile Lighthouse: 100 performance, 100 accessibility, 100 best practices,
-  and 100 SEO; LCP 1,208 ms, CLS 0, TBT 38 ms.
+- `npm ci` passed with 0 reported vulnerabilities.
+- `npm test` passed: 6 unit, 4 Rust/SQLite, and 27 Playwright tests.
+- `npm run build` passed and produced `dist/`; JS is 11.72 KB gzip and CSS is 4.19 KB gzip.
+- Every one of the 20 exact commands in `.factory/claims.json` passed when run separately. Nineteen have exactly one required tag; the remaining passing command is the incomplete item above.
+- Live browser suite: 27/27 passed. Restart-enabled live suite: 2/2 passed. Two isolated clients shared an authoritative result; the owned backend restart preserved it and recovered health. 429/`Retry-After`, expiry, unauthorised access, and the two-player limit passed.
+- Fresh desktop and 390 px phone contexts showed the job, audience, first action, game board, and an exhibit before scrolling with no overflow or console errors. The sample was populated, labelled persistently, resettable, and isolated from normal storage.
+- Deterministic live play reached both actual win and loss end screens. Replay/restart reset correctly. Phone-class measured frame rate was 60 fps.
+- URL verification and Playwright Axe passed. The repaired 44 px touch targets and 404 skip-link focus/overlap checks passed on all public routes.
+- Successful mobile Lighthouse: 100 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1,211 ms, CLS 0, TBT 52 ms.
 
-## Earlier finding disposition
+## Offer and dependency
 
-| Finding | Current disposition |
-| --- | --- |
-| Verification 1–5: public room backend unavailable or lost after restart | Resolved. The linked backend again passed two-client sharing, restart persistence, health, recovery, and new-room checks. |
-| Verification 1–2: unknown routes returned HTTP 200 | Resolved. Unknown URLs return the designed HTML with HTTP 404. |
-| Verification 2: cases lacked distinct inference rules | Resolved. The case-rules claim covers all 20 curated cases. |
-| Verification 2: six public claims lacked registered tests | Resolved. Those six commands still pass. |
-| Verification 6: undersized mobile targets | Resolved with measured cross-route browser coverage. |
-| Verification 6: 404 skip-link overlap and default focus | Resolved at 390 px and 1440 px with keyboard-focus coverage. |
-| Verification 6: three privacy claims lacked tests | Resolved with three exact claim commands. |
-
-## Offer and remaining dependency
-
-The offer remains **$6 USD once** for 19 additional curated cases, making 20
-total, with no subscription. The permanent free case still works. Public
-metadata is present in `.factory/billing-offer.json` and copied to
-`/work/.evidence/billing-offer.json`.
-
-Checkout registration is still owned by the separate billing operator. The
-live purchase control remains disabled and says registration is pending. The
-tests use recorded license verification fixtures and do not claim that a live
-checkout or paid activation passed. No offline behavior is promised.
-
-The separately named `factory-evidence/orderly-chaos-verify-6/qa-report.md`
-was not mounted anywhere under `/work`; the complete repository copy in
-`.factory/verification-6.md` was used.
+The complete offer is $6 USD once for 19 extra curated cases, 20 total, with no subscription. The free case remains usable. Checkout registration remains an external billing-operator dependency. The public button stays disabled and says registration is pending; verification used recorded license fixtures and does not claim a real checkout or paid activation.
 
 ## How to verify
 
@@ -91,12 +41,4 @@ npm run build
 npm run verify:live
 ```
 
-Run each exact command in `.factory/claims.json` separately. Then run the full
-suite against the public origin:
-
-```sh
-BASE_URL=https://orderly-chaos.sociobot.in npm run test:e2e
-```
-
-Evidence is status-only. It contains no credentials, cookie values, room
-codes, player access values, or license values.
+Run each command in `.factory/claims.json` separately. Then verify that every claim ID appears exactly once as `@claim:<id>` in its test source. The current audit fails only for `room-token-hash`.
