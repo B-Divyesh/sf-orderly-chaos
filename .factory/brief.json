@@ -1,0 +1,32 @@
+{
+  "slug": "orderly-chaos",
+  "title": "Orderly Chaos",
+  "territory": "games-creative",
+  "user": "Puzzle-curious adults and teens who enjoy deduction but want a quick visual logic game that teaches itself through play instead of a dense abstract-rules tutorial.",
+  "evidence": [
+    {
+      "url": "https://hn.algolia.com/api/v1/items/45722479",
+      "date": "2025-10-27",
+      "quote_or_summary": "An Ask HN poster proposes a puzzle where players turn a partially known order into a total order with minimal comparisons, and explicitly asks whether it would be fun, challenging, or educational."
+    },
+    {
+      "url": "https://itch.io/t/6804710/yappadub-studio-a-multiplayer-dub-booth-in-the-browser",
+      "date": "2026-08-16",
+      "quote_or_summary": "An itch.io browser release demonstrates current interest in small, social, browser-native interactions rather than requiring a native-client workflow."
+    }
+  ],
+  "recurrence": "A concrete request tests an underused deduction mechanic, while a separate 2026 browser release supports a low-friction experimental-web format.",
+  "current_workaround": "Use logic-grid puzzle books, play number-sorting exercises, or learn formal algorithms through tools that are not designed as games.",
+  "incumbents_and_gap": "Logic-grid puzzles and human-sort games teach deduction, but often front-load notation. Word games and coding sites do not turn partial-order discovery into a compact visual game for general players.",
+  "smallest_useful_product": "A 1\u20132 player browser deduction race: arrange six eccentric museum exhibits from lightest to heaviest, spending a limited number of comparison tokens; discovered relations animate into a constellation of clues. Solo runs take 5 minutes; two players can share a room code and solve the same case asynchronously. Each case changes objects, hidden ordering graph, and one special inference rule. Non-goals: school dashboards, AI tutoring, long text lessons, and competitive global matchmaking.",
+  "success_measure": "At least 60% of first-time players solve a beginner case without opening the rules panel, and 20% attempt a second case after seeing their comparison efficiency.",
+  "artifact_class": "browser-game",
+  "monetization": "one-time \u2014 a curated case pack is a transparent purchase and avoids education-data or ad incentives.",
+  "constraints": "Do not claim assessment or educational outcomes without testing; use original cases and accessible shapes/text rather than color alone; room codes must expire.",
+  "est_build_effort": "S",
+  "scale": "small",
+  "why_distinct": "It makes information-efficient ordering into a readable detective game rather than wrapping a sorting exercise in points.",
+  "confidence": 3,
+  "state": "RESEARCHED",
+  "research_run": "research-browser-games-0901-204312-1"
+}
