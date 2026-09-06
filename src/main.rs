@@ -97,7 +97,7 @@ async fn main() {
 
     let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     let db_path = database_path();
-    let db = open_database(&db_path).expect("database setup failed");
+    let db = open_database_with_retry(&db_path).await;
     info!(database = %redacted_database_location(&db_path), "room database ready; no secret configuration required");
 
     let state = AppState {
@@ -616,6 +616,21 @@ fn open_database(path: &str) -> rusqlite::Result<Connection> {
          CREATE INDEX IF NOT EXISTS idx_rooms_expiry ON rooms(expires_at);",
     )?;
     Ok(connection)
+}
+
+async fn open_database_with_retry(path: &str) -> Connection {
+    let mut last_error = String::new();
+    for attempt in 1..=12_u64 {
+        match open_database(path) {
+            Ok(connection) => return connection,
+            Err(error) => {
+                last_error = error.to_string();
+                warn!(attempt, error = %error, "database setup delayed; retrying");
+                tokio::time::sleep(Duration::from_secs(attempt.min(5))).await;
+            }
+        }
+    }
+    panic!("database setup failed after retries: {last_error}");
 }
 
 fn purge_expired(state: &AppState, now: i64) {
