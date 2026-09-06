@@ -9,7 +9,7 @@ use axum::{
 };
 use chrono::Utc;
 use rand::RngCore;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -592,7 +592,20 @@ fn redacted_database_location(path: &str) -> &'static str {
 }
 
 fn open_database(path: &str) -> rusqlite::Result<Connection> {
-    let connection = Connection::open(path)?;
+    let connection = if path.starts_with("/data/") {
+        // Azure Files does not provide SQLite-compatible byte-range locks.
+        // The fleet enforces one replica, so the no-lock VFS is the safe
+        // persistent option for this product's single writer.
+        Connection::open_with_flags_and_vfs(
+            path,
+            OpenFlags::SQLITE_OPEN_READ_WRITE
+                | OpenFlags::SQLITE_OPEN_CREATE
+                | OpenFlags::SQLITE_OPEN_URI,
+            "unix-none",
+        )?
+    } else {
+        Connection::open(path)?
+    };
     connection.busy_timeout(Duration::from_secs(5))?;
     connection.execute_batch(
         "PRAGMA foreign_keys = ON;
